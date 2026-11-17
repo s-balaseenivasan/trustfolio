@@ -33,6 +33,7 @@
  *        --require ./qa/tests/_harness/server-only-stub.cjs \
  *        ./qa/tests/security/route-authorization.test.ts
  */
+export {};
 const assert = require("node:assert/strict");
 const { randomUUID } = require("node:crypto");
 
@@ -105,11 +106,11 @@ async function main() {
     }
     {
       const r = await expectThrow(() => requireClubCoordinator(regularMember.id, club.id), ClubError);
-      record("TC-API-CLUBDOC-002", "requireClubCoordinator() throws (404-equivalent) for a regular ACTIVE member of the same club who is not its coordinator", r.threw && r.isExpectedType, JSON.stringify({ threw: r.threw, code: r.error?.code }));
+      record("TC-API-CLUBDOC-002", "requireClubCoordinator() throws (404-equivalent) for a regular ACTIVE member of the same club who is not its coordinator", Boolean(r.threw && r.isExpectedType), JSON.stringify({ threw: r.threw, code: r.error?.code }));
     }
     {
       const r = await expectThrow(() => requireClubCoordinator(unrelatedUser.id, club.id), ClubError);
-      record("TC-API-CLUBDOC-003", "requireClubCoordinator() throws (404-equivalent) for a user with no membership in the club at all", r.threw && r.isExpectedType, JSON.stringify({ threw: r.threw, code: r.error?.code }));
+      record("TC-API-CLUBDOC-003", "requireClubCoordinator() throws (404-equivalent) for a user with no membership in the club at all", Boolean(r.threw && r.isExpectedType), JSON.stringify({ threw: r.threw, code: r.error?.code }));
     }
 
     // ================================================================
@@ -190,7 +191,7 @@ async function main() {
     }
     {
       const r = await expectThrow(() => requireVolunteerTask(unassignedVolunteer.id, task.id), ProjectOperationError);
-      record("TC-API-TASK-002", "requireVolunteerTask() throws (404-equivalent) for an active club member who is not assigned to the task", r.threw && r.isExpectedType, JSON.stringify({ threw: r.threw, code: r.error?.code }));
+      record("TC-API-TASK-002", "requireVolunteerTask() throws (404-equivalent) for an active club member who is not assigned to the task", Boolean(r.threw && r.isExpectedType), JSON.stringify({ threw: r.threw, code: r.error?.code }));
     }
     {
       const row = await requireTaskReader({ id: "nonexistent-admin-id", role: "ADMIN" }, task.id);

@@ -18,6 +18,7 @@
  *        --require ./qa/tests/_harness/server-only-stub.cjs \
  *        ./qa/tests/security/login-lockout.test.ts
  */
+export {};
 const assert = require("node:assert/strict");
 const { randomUUID } = require("node:crypto");
 

@@ -23,6 +23,7 @@
  *        --require ./qa/tests/_harness/server-only-stub.cjs \
  *        ./qa/tests/db/media-deletion-guards.test.ts
  */
+export {};
 const assert = require("node:assert/strict");
 const { randomUUID } = require("node:crypto");
 
