@@ -1,0 +1,71 @@
+{
+  "findings": [
+    {
+      "id": "QA-REG-001",
+      "module": "Authentication",
+      "feature": "Credentials login — account rate limiter",
+      "finding": "The new per-account login limiter added for QA-AUTH-001 (20 attempts/hour, keyed on email only) is never reset on a successful login — only the per-IP counter is cleared — and the application exposes no admin-facing way to clear a tripped RateLimit row. A legitimately busy account (shared helpdesk/coordinator login, multiple devices, a password manager retrying a stale credential, or simply 20 successful same-hour logins) is locked out of every subsequent login attempt for up to 60 minutes with no in-app remedy other than waiting out the window.",
+      "severity": "Medium",
+      "status": "SUSPECTED",
+      "evidence": [
+        "src/auth.ts:36-41 — accountLimiterKey is charged by every authorize() call, success or failure, via Promise.all before credentials are even checked",
+        "src/auth.ts:47-49 — comment confirms the design choice: 'Only the per-IP counter is cleared on success. Clearing the account counter too would let one correct password reset the budget for an ongoing spray against the same account.'",
+        "src/lib/rate-limit.ts:46-49 — resetRateLimit() exists but is called nowhere for the account-keyed bucket, and no admin action in src/server/actions anywhere calls it",
+        "src/auth.ts:41 — if (!limit.success || !accountLimit.success) return null; — identical to the invalid-credentials path, so a locked-out legitimate user sees the same generic failure already filed as QA-AUTH-004, with no indication that waiting (rather than resetting a password) is the fix"
+      ],
+      "reproduction": [
+        "Not reproduced — no database is available in this run to drive 21 authorize() calls against one account and observe the lockout",
+        "Derived from static reading of src/auth.ts and src/lib/rate-limit.ts: every call to authorize() increments the account-keyed row regardless of outcome, and nothing in the codebase ever deletes or resets that row before its one-hour expiry"
+      ],
+      "expected": "A rate limiter wide enough not to be casually self-triggered by legitimate use, or an operator-facing way to clear it when it is",
+      "actual": "No reset path exists for the account-keyed bucket under any circumstance short of the hour elapsing, and the fix's own code comment shows this was a deliberate trade-off that the fix_applied description does not surface as a residual risk",
+      "root_cause": "QA-AUTH-001 was fixed by adding a wider-window per-account counter that is intentionally harder to reset than the per-IP one, to close the IP-rotation gap the finding described — but no corresponding operator override was added",
+      "uncertainty": "Whether any real account plausibly makes 20+ login attempts (successful or not) within a rolling hour was not verified — this depends on usage patterns not observable from code. Confirm by checking login telemetry/ActivityLog LOGIN counts per user per hour once a database is available, or by adding an admin action that calls resetRateLimit('login:account:' + hashIdentifier(email))",
+      "affected_modules": [
+        "Authentication",
+        "Admin portal",
+        "Club portal",
+        "Volunteer portal"
+      ],
+      "user_impact": "If triggered, a legitimate user is fully locked out of the application for up to an hour with a message indistinguishable from 'wrong password' (QA-AUTH-004), and no administrator action exists to shorten that wait",
+      "recommendation": "Add an admin action (ADMIN role only) that clears a specific account's login rate-limit keys, for use when a legitimate lockout is reported, and surface a distinct 'too many attempts, try again at HH:MM' message (QA-AUTH-004) so the user knows waiting is the correct action rather than resetting their password",
+      "regression_coverage": [
+        "Mechanical: typecheck PASS, lint PASS, test:unit 19/19 PASS (none of the 19 tests exercise src/auth.ts or src/lib/rate-limit.ts)",
+        "Still needed: an integration test driving 21 authorize() calls for one account and asserting both the lockout and the absence of any reset path (requires a database)"
+      ],
+      "confidence": "medium",
+      "lifecycle": "NEW",
+      "first_seen": "2026-11-16T12:30:00.000Z"
+    },
+    {
+      "id": "QA-REG-002",
+      "module": "QA process",
+      "feature": "Impact analysis tooling",
+      "finding": "qa/reports/diff-scope.json's top-level `changed` array and `counts.changedFiles` (6) omit src/app/api/club/documents/[id]/file/route.ts, even though that file is part of the actual 7-file change set for this regression pass (it carries the QA-API-001 fix) and its downstream route (`api.club.documentFile`) does appear inside `impact.downstreamNodes` and `impact.routes`.",
+      "severity": "Low",
+      "status": "CONFIRMED",
+      "evidence": [
+        "qa/reports/diff-scope.json:5-12 — `changed` lists exactly 6 files; src/app/api/club/documents/[id]/file/route.ts is not among them",
+        "qa/reports/diff-scope.json:193 — `counts.changedFiles: 6`",
+        "qa/reports/diff-scope.json:87 and :136 — `impact.routes` and `impact.downstreamNodes` both independently reference the club-documents file route and `api.club.documentFile`, so the omission did not create a blind spot in this pass, but the file list itself is stale relative to the 7-file change set given in this task's brief"
+      ],
+      "reproduction": [
+        "Compare the CHANGE SET in the task brief (7 files) against qa/reports/diff-scope.json's `changed` array (6 files) and `counts.changedFiles` (6)"
+      ],
+      "expected": "diff-scope.json's file list and count match the actual set of files modified for the approved fixes it is meant to scope",
+      "actual": "The scope file undercounts by one file. In this instance the downstream graph walk happened to already include the missing file's route (likely because another seed file shares a dependency with it), so no impacted node was missed — but a future run that trusts `changed`/`counts.changedFiles` as the authoritative file list, rather than re-deriving it, could silently skip impact analysis for a file left out this way",
+      "root_cause": "diff-scope.json appears to have been generated before the QA-API-001 fix (club-documents route) was applied, or that file was added to the change set after the scope script ran, and the script was not re-run",
+      "uncertainty": null,
+      "affected_modules": [
+        "QA workflow",
+        "Club portal"
+      ],
+      "user_impact": "None at runtime. A process gap that could cause a future regression pass to under-scope its impact analysis",
+      "recommendation": "Re-run scripts/scope-diff.mjs against the full, final 7-file change set before closing this regression cycle, so `changed` and `counts.changedFiles` are accurate for any later audit of this run",
+      "regression_coverage": [],
+      "confidence": "high",
+      "lifecycle": "NEW",
+      "first_seen": "2026-11-16T12:30:00.000Z"
+    }
+  ]
+}

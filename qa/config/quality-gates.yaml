@@ -1,0 +1,71 @@
+# Complete Application QA — quality gates
+# Conditions that must hold before a QA run may be called complete.
+# Copied into qa/config/quality-gates.yaml on first run; never overwritten.
+
+quality_gates:
+
+  discovery:
+    require_repository_inventory: true
+    require_technology_inventory: true
+    require_module_inventory: true
+    require_data_store_inventory: true
+    require_unknowns_section: true
+
+  architecture:
+    require_api_inventory: true
+    require_role_permission_matrix: true
+    require_dependency_matrix: true
+
+  workflows:
+    require_critical_workflow_mapping: true
+    require_input_output_mapping: true
+    require_state_transitions: true
+    require_knowledge_graph: true
+    mark_untraced_steps_unverified: true
+
+  ui_audit:
+    require_element_inventory: true
+    require_classification: true
+    require_removal_evidence: true
+    auto_removal_allowed: false
+    require_review_queue: true
+
+  testing:
+    critical_workflows_must_be_executed: true
+    no_unverified_passes: true          # EXECUTED-* requires command, exit code and evidence
+    report_skipped_tests: true
+    report_failed_tests: true
+    report_flaky_tests: true
+    require_risk_ranking: true
+
+  security:
+    production_testing_allowed: false
+    secret_exposure_allowed: false
+    personal_data_in_reports_allowed: false
+    third_party_systems_allowed: false
+    require_role_matrix_coverage: true
+
+  performance:
+    require_stated_target_or_no_verdict: true
+    require_measurement_conditions: true
+
+  data:
+    production_access_allowed: false
+    destructive_operations_allowed: false
+    require_cross_store_consistency_review: true
+
+  fixes:
+    require_human_approval: true
+    approval_scope: per_finding
+    require_impact_analysis: true
+    require_minimal_diff: true
+    require_regression: true
+    require_clean_diff_review: true
+
+  completion:
+    report_all_critical_findings: true
+    report_coverage_gaps: true
+    report_untested_areas: true
+    report_remaining_risks: true
+    perfect_quality_claim_allowed: false
+    production_ready_claim_allowed: false

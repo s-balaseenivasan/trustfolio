@@ -1,0 +1,98 @@
+{
+  "module": "Media & evidence storage",
+  "source_md": "qa/test-cases/media-library.md",
+  "test_file": "qa/tests/db/media-deletion-guards.test.ts",
+  "cases": [
+    {
+      "id": "TC-DB-MEDIA-001",
+      "title": "Evidence attachment (ClubDocument) blocks media deletion",
+      "workflow": "workflow.media.publish",
+      "requirement": "REQ-DOC-005",
+      "type": "db",
+      "priority": "high",
+      "role": "n/a",
+      "status": "EXECUTED-PASS",
+      "evidence": ["qa/reports/evidence/run-qa-20261116/media-deletion-guards.log"],
+      "regression_of": "QA-DB-001"
+    },
+    {
+      "id": "TC-DB-MEDIA-001b",
+      "title": "Bypassing the guard and deleting the media directly throws Prisma P2003 (schema Restrict)",
+      "workflow": "workflow.media.publish",
+      "requirement": "DERIVED-FROM-CODE",
+      "type": "db",
+      "priority": "medium",
+      "role": "n/a",
+      "status": "EXECUTED-PASS",
+      "evidence": ["qa/reports/evidence/run-qa-20261116/media-deletion-guards.log"]
+    },
+    {
+      "id": "TC-DB-MEDIA-002",
+      "title": "A PUBLISHED gallery album blocks media deletion",
+      "workflow": "workflow.media.publish",
+      "requirement": "REQ-DOC-005",
+      "type": "db",
+      "priority": "high",
+      "role": "n/a",
+      "status": "EXECUTED-PASS",
+      "evidence": ["qa/reports/evidence/run-qa-20261116/media-deletion-guards.log"],
+      "regression_of": "QA-FLOW-002"
+    },
+    {
+      "id": "TC-DB-MEDIA-002b",
+      "title": "Bypassing the guard cascades: the raw delete silently removes the photo from the still-PUBLISHED album",
+      "workflow": "workflow.media.publish",
+      "requirement": "DERIVED-FROM-CODE",
+      "type": "db",
+      "priority": "high",
+      "role": "n/a",
+      "status": "EXECUTED-PASS",
+      "evidence": ["qa/reports/evidence/run-qa-20261116/media-deletion-guards.log"]
+    },
+    {
+      "id": "TC-DB-MEDIA-003",
+      "title": "A PUBLISHED project's cover blocks media deletion",
+      "workflow": "workflow.media.publish",
+      "requirement": "REQ-DOC-005",
+      "type": "db",
+      "priority": "high",
+      "role": "n/a",
+      "status": "EXECUTED-PASS",
+      "evidence": ["qa/reports/evidence/run-qa-20261116/media-deletion-guards.log"],
+      "regression_of": "QA-FLOW-002"
+    },
+    {
+      "id": "TC-DB-MEDIA-003b",
+      "title": "Bypassing the guard nulls the cover reference on the still-PUBLISHED project",
+      "workflow": "workflow.media.publish",
+      "requirement": "DERIVED-FROM-CODE",
+      "type": "db",
+      "priority": "high",
+      "role": "n/a",
+      "status": "EXECUTED-PASS",
+      "evidence": ["qa/reports/evidence/run-qa-20261116/media-deletion-guards.log"]
+    },
+    {
+      "id": "TC-DB-MEDIA-004",
+      "title": "An unused media file has no deletion blocker",
+      "workflow": "workflow.media.publish",
+      "requirement": "REQ-DOC-005",
+      "type": "db",
+      "priority": "medium",
+      "role": "n/a",
+      "status": "EXECUTED-PASS",
+      "evidence": ["qa/reports/evidence/run-qa-20261116/media-deletion-guards.log"]
+    },
+    {
+      "id": "TC-DB-MEDIA-004b",
+      "title": "An unused media file deletes successfully end to end",
+      "workflow": "workflow.media.publish",
+      "requirement": "REQ-DOC-005",
+      "type": "db",
+      "priority": "medium",
+      "role": "n/a",
+      "status": "EXECUTED-PASS",
+      "evidence": ["qa/reports/evidence/run-qa-20261116/media-deletion-guards.log"]
+    }
+  ]
+}

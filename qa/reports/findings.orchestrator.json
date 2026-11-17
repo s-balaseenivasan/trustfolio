@@ -1,0 +1,65 @@
+{
+  "phase": "orchestrator",
+  "note": "Findings owned by the orchestrator rather than a single-layer phase.",
+  "findings": [
+    {
+      "id": "QA-NOTIFY-007",
+      "module": "Notifications",
+      "feature": "NotificationOutbox delivery",
+      "finding": "NotificationOutbox rows are created by four services but never consumed or delivered; no cron, queue consumer or sender transitions a row from PENDING to SENT or FAILED",
+      "severity": "Medium",
+      "status": "CONFIRMED",
+      "evidence": [
+        "src/server/clubs/service.ts — creates NotificationOutbox rows",
+        "src/server/volunteers/service.ts — creates NotificationOutbox rows",
+        "src/server/projects/service.ts — creates NotificationOutbox rows",
+        "src/server/approval/foundation.ts — creates NotificationOutbox rows",
+        "src/app/admin/(dashboard)/approvals/page.tsx:20 — the only reader: findMany for the signed-in actor, take: 10",
+        "prisma/schema.prisma — NotificationStatus enum defines PENDING, SENT, FAILED"
+      ],
+      "reproduction": [
+        "Grep the repository for writes to NotificationOutbox — four service modules create rows",
+        "Grep for any read of NotificationOutbox — the only one is a take: 10 display list on the approvals page",
+        "Grep for any update setting status to SENT or FAILED — there is none"
+      ],
+      "expected": "A row written to an outbox is eventually delivered and its status updated, or a documented decision records that delivery is not yet implemented",
+      "actual": "Rows accumulate in PENDING forever. The SENT and FAILED enum members are unreachable. Users are never notified of membership decisions, service-log reviews or task reviews",
+      "root_cause": "The outbox write side was built with the feature; the delivery side was never implemented, and no code path marks the gap",
+      "uncertainty": null,
+      "affected_modules": ["Clubs", "Volunteers", "Projects", "Approval engine", "Notifications"],
+      "user_impact": "Every review decision that should notify a user silently does not. A volunteer whose service log is approved or rejected is never told, and the table grows unbounded",
+      "recommendation": "Either implement a consumer that delivers via the existing Resend integration and sets status, or document the outbox as deliberately deferred and surface pending items in the UI so decisions are not lost. The unbounded growth needs addressing either way",
+      "regression_coverage": [
+        "Proposed: assert a review decision writes an outbox row and that the consumer transitions it to SENT"
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "QA-PROCESS-008",
+      "module": "QA process",
+      "feature": "Finding citation integrity",
+      "finding": "Three phase reports cited finding id QA-NOTIFY-007 as already filed when no such entry existed in findings.json, so each phase correctly declined to duplicate it and the deferral chain terminated nowhere",
+      "severity": "Low",
+      "status": "CONFIRMED",
+      "evidence": [
+        "qa/architecture/application-architecture.md — cites QA-NOTIFY-007 as raised",
+        "qa/architecture/role-permission-matrix.md — defers to QA-NOTIFY-007",
+        "qa/discovery/database-inventory.md — defers to QA-NOTIFY-007",
+        "qa/reports/findings.workflow.json — QA-FLOW-011 detected the dangling reference"
+      ],
+      "reproduction": [
+        "Grep qa/**/*.md for QA-NOTIFY-007 — three citations",
+        "Search findings.json for an entry with that id — none existed before this shard"
+      ],
+      "expected": "A finding id appearing in any report resolves to an entry in findings.json",
+      "actual": "The id was cited by the orchestrator before being filed. Each subsequent agent honoured the instruction not to duplicate an existing finding, so the real defect went unrecorded while appearing handled",
+      "root_cause": "The orchestrator wrote a forward reference to a finding it had not yet created, and nothing checked that cited ids exist",
+      "uncertainty": null,
+      "affected_modules": ["QA workflow"],
+      "user_impact": "A confirmed application defect was invisible in the findings set while three reports implied it was tracked — the most dangerous shape of reporting error, because the omission looks like coverage",
+      "recommendation": "File the finding before citing it. Enforced mechanically as of this run: validate-reports.mjs now resolves every QA-<AREA>-<NNN> reference in qa/**/*.md against findings.json and fails on a dangling id",
+      "regression_coverage": ["validate-reports.mjs dangling-reference check"],
+      "confidence": "high"
+    }
+  ]
+}

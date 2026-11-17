@@ -1,0 +1,89 @@
+{
+  "phase": "runtime",
+  "environment": {
+    "database": "isolated Postgres 18 container, port 55432, throwaway credentials, seeded",
+    "app": "production build (npm run start) on port 3100",
+    "note": "The developer's own instance occupies port 3000 against a different database. A first attempt probed that instance by mistake and produced 17 false 5xx results; those are discarded. Only the port-3100 run is reported here."
+  },
+  "findings": [
+    {
+      "id": "QA-RUN-001",
+      "module": "Authorization",
+      "feature": "Unauthenticated access to protected surface",
+      "finding": "Runtime probing confirms every protected route refuses unauthenticated access correctly: 32 page routes redirect 307 to /admin/login with a callbackUrl, 6 API routes return 401, and no route returns 5xx",
+      "severity": "Informational",
+      "status": "CONFIRMED",
+      "evidence": [
+        "qa/reports/route-smoke.json — 74 routes probed, mode EXECUTED, status distribution 200x20 307x32 401x6 404x10 405x5 400x1",
+        "qa/reports/evidence/db-run-001/check-db.log — all six migration suites passed first",
+        "src/server/auth-guard.ts:42 — requireAdmin throws UnauthorizedError",
+        "src/proxy.ts:18 — the optimistic cookie check that produces the 307"
+      ],
+      "reproduction": [
+        "Start Postgres 18 in a container on 55432 and apply migrations with an explicit DATABASE_URL",
+        "Seed, build, and start the app on port 3100 against that database",
+        "node <skill>/scripts/route-smoke.mjs --base=http://localhost:3100"
+      ],
+      "expected": "Protected pages redirect to login; protected APIs return 401; nothing leaks a 500",
+      "actual": "Exactly that. Zero 5xx across 74 routes",
+      "root_cause": null,
+      "uncertainty": null,
+      "affected_modules": ["Authorization", "Admin portal", "Club portal", "Volunteer portal"],
+      "user_impact": "None — this is the positive result. It empirically confirms the static verified-negative from phase 5, which had only established that guards were present in code, not that their failure mode was correct",
+      "recommendation": "No action. Record as the runtime baseline for regression comparison",
+      "regression_coverage": ["route-smoke EXECUTED run, 74 routes"],
+      "confidence": "high"
+    },
+    {
+      "id": "QA-RUN-002",
+      "module": "Testing",
+      "feature": "check:db is not in CI's required path for local work",
+      "finding": "The six database verification suites pass, and they are the project's only functional coverage — but they had never been run during this QA effort, and eight fixes were applied and shipped as verified on typecheck, lint and build alone",
+      "severity": "Medium",
+      "status": "CONFIRMED",
+      "evidence": [
+        "qa/reports/evidence/db-run-001/check-db.log — six suites, all pass, exit 0",
+        "qa/reports/evidence/db-run-001/seed.log — seeding succeeded against the isolated database",
+        ".github/workflows/check.yml — CI does run check:db, so the gate exists upstream",
+        "package.json — check:db requires a database and is therefore skipped by default locally"
+      ],
+      "reproduction": [
+        "Observe that the eight fixes in this run were marked verified before any suite requiring a database had been executed",
+        "Run check:db against an isolated database — it passes, and would have caught a schema-level regression"
+      ],
+      "expected": "A fix touching deletion guards, authorization and rate limiting is verified by something that executes it",
+      "actual": "Verified by typecheck, lint, 19 unit tests over unrelated files, and a production build. The suites that exercise the schema existed and were not run until now",
+      "root_cause": "Running them needs a database, and nothing in the local workflow provisions one, so the step is skipped rather than failed",
+      "uncertainty": null,
+      "affected_modules": ["All"],
+      "user_impact": "Regressions in the operational schema reach CI rather than being caught locally",
+      "recommendation": "Use scripts/env-bootstrap.mjs to provision a disposable database and make check:db part of the local pre-commit path. The suites already exist and already pass — only the provisioning was missing",
+      "regression_coverage": ["qa/reports/evidence/db-run-001/check-db.log"],
+      "confidence": "high"
+    },
+    {
+      "id": "QA-RUN-003",
+      "module": "Performance",
+      "feature": "Public page response times",
+      "finding": "Production-build response times across 74 routes: 41ms median, 160ms p90, 516ms max, with no route exceeding 1500ms",
+      "severity": "Informational",
+      "status": "CONFIRMED",
+      "evidence": [
+        "qa/reports/route-smoke.json — per-route durationMs for all 74 routes"
+      ],
+      "reproduction": [
+        "Production build on port 3100 against the seeded isolated database",
+        "route-smoke with --slow=1500, concurrency 4, single unwarmed request per route"
+      ],
+      "expected": "No stated performance target exists in the project, so this is a baseline rather than a pass or fail",
+      "actual": "41ms median, 160ms p90, 516ms max",
+      "root_cause": null,
+      "uncertainty": null,
+      "affected_modules": ["Public site"],
+      "user_impact": "None observed. Conditions: production build, seeded demo dataset (8 projects, 12 activities, 6 documents), single unwarmed request, concurrency 4, local loopback. Not representative of production data volume",
+      "recommendation": "Adopt this as the baseline and set an explicit p95 target so future measurements have something to fail against",
+      "regression_coverage": [],
+      "confidence": "medium"
+    }
+  ]
+}

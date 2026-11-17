@@ -1,0 +1,130 @@
+{
+  "module": "API authorization",
+  "source_md": "qa/test-cases/route-authorization.md",
+  "test_file": "qa/tests/security/route-authorization.test.ts",
+  "cases": [
+    {
+      "id": "TC-API-CLUBDOC-001",
+      "title": "requireClubCoordinator() succeeds for the actual coordinator of an ACTIVE club",
+      "workflow": "workflow.club.membership",
+      "requirement": "REQ-CLUB-032",
+      "type": "security",
+      "priority": "critical",
+      "role": "club coordinator (owner)",
+      "status": "EXECUTED-PASS",
+      "evidence": ["qa/reports/evidence/run-qa-20261116/route-authorization.log"]
+    },
+    {
+      "id": "TC-API-CLUBDOC-002",
+      "title": "requireClubCoordinator() throws for a regular ACTIVE member who is not the coordinator",
+      "workflow": "workflow.club.membership",
+      "requirement": "REQ-CLUB-032",
+      "type": "security",
+      "priority": "critical",
+      "role": "club member (non-owner)",
+      "status": "EXECUTED-PASS",
+      "evidence": ["qa/reports/evidence/run-qa-20261116/route-authorization.log"]
+    },
+    {
+      "id": "TC-API-CLUBDOC-003",
+      "title": "requireClubCoordinator() throws for a user with no membership in the club at all",
+      "workflow": "workflow.club.membership",
+      "requirement": "REQ-CLUB-032",
+      "type": "security",
+      "priority": "high",
+      "role": "unrelated authenticated user",
+      "status": "EXECUTED-PASS",
+      "evidence": ["qa/reports/evidence/run-qa-20261116/route-authorization.log"]
+    },
+    {
+      "id": "TC-API-CLUBDOC-004",
+      "title": "A PRIVATE club-document media row without the storage-key prefix is refused even for the authorized coordinator",
+      "workflow": "workflow.club.membership",
+      "requirement": "UNDOCUMENTED",
+      "type": "security",
+      "priority": "medium",
+      "role": "club coordinator (owner)",
+      "status": "EXECUTED-PASS",
+      "evidence": ["qa/reports/evidence/run-qa-20261116/route-authorization.log"],
+      "regression_of": "QA-API-001"
+    },
+    {
+      "id": "TC-API-CLUBDOC-005",
+      "title": "Control case — a PRIVATE club-document media row with the correct prefix passes the condition",
+      "workflow": "workflow.club.membership",
+      "requirement": "UNDOCUMENTED",
+      "type": "security",
+      "priority": "medium",
+      "role": "club coordinator (owner)",
+      "status": "EXECUTED-PASS",
+      "evidence": ["qa/reports/evidence/run-qa-20261116/route-authorization.log"],
+      "regression_of": "QA-API-001"
+    },
+    {
+      "id": "TC-API-TASK-001",
+      "title": "requireVolunteerTask() succeeds for the actually assigned, consented, active-member volunteer",
+      "workflow": "workflow.project.task",
+      "requirement": "UNDOCUMENTED",
+      "type": "security",
+      "priority": "critical",
+      "role": "assigned volunteer (owner)",
+      "status": "EXECUTED-PASS",
+      "evidence": ["qa/reports/evidence/run-qa-20261116/route-authorization.log"]
+    },
+    {
+      "id": "TC-API-TASK-002",
+      "title": "requireVolunteerTask() throws for an active club member who is not assigned to the task",
+      "workflow": "workflow.project.task",
+      "requirement": "UNDOCUMENTED",
+      "type": "security",
+      "priority": "critical",
+      "role": "club member, not assigned (non-owner)",
+      "status": "EXECUTED-PASS",
+      "evidence": ["qa/reports/evidence/run-qa-20261116/route-authorization.log"]
+    },
+    {
+      "id": "TC-API-TASK-003",
+      "title": "requireTaskReader() returns the task for an ADMIN actor regardless of assignment (bypass)",
+      "workflow": "workflow.project.task",
+      "requirement": "UNDOCUMENTED",
+      "type": "security",
+      "priority": "high",
+      "role": "ADMIN",
+      "status": "EXECUTED-PASS",
+      "evidence": ["qa/reports/evidence/run-qa-20261116/route-authorization.log"]
+    },
+    {
+      "id": "TC-API-TASK-004",
+      "title": "requireTaskReader() succeeds for the assigned volunteer (non-admin) via the inner requireVolunteerTask() call",
+      "workflow": "workflow.project.task",
+      "requirement": "UNDOCUMENTED",
+      "type": "security",
+      "priority": "critical",
+      "role": "assigned volunteer (owner)",
+      "status": "EXECUTED-PASS",
+      "evidence": ["qa/reports/evidence/run-qa-20261116/route-authorization.log"]
+    },
+    {
+      "id": "TC-API-TASK-005",
+      "title": "requireTaskReader() throws for an unrelated actor who is neither assigned nor the assignment's coordinator",
+      "workflow": "workflow.project.task",
+      "requirement": "UNDOCUMENTED",
+      "type": "security",
+      "priority": "critical",
+      "role": "unrelated authenticated user (non-owner)",
+      "status": "EXECUTED-PASS",
+      "evidence": ["qa/reports/evidence/run-qa-20261116/route-authorization.log"]
+    },
+    {
+      "id": "TC-API-TASK-006",
+      "title": "requireTaskReader() throws TASK_NOT_FOUND for a nonexistent task id",
+      "workflow": "workflow.project.task",
+      "requirement": "UNDOCUMENTED",
+      "type": "security",
+      "priority": "medium",
+      "role": "any",
+      "status": "EXECUTED-PASS",
+      "evidence": ["qa/reports/evidence/run-qa-20261116/route-authorization.log"]
+    }
+  ]
+}

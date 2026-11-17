@@ -1,0 +1,548 @@
+{
+  "generatedAt": "2026-11-16T13:11:18.258Z",
+  "root": "C:\\Users\\balas\\Desktop\\Project\\trustfolio",
+  "mode": "READ_ONLY",
+  "disclaimer": "Manifest and source-pattern evidence only. Confirm each project, framework and integration against entry points and runtime configuration before treating it as active.",
+  "projects": [
+    {
+      "ecosystem": "javascript",
+      "language": "JavaScript / TypeScript",
+      "name": "trustfolio",
+      "workspaces": null,
+      "scripts": [
+        "dev",
+        "build",
+        "start",
+        "lint",
+        "typecheck",
+        "test:unit",
+        "check",
+        "check:db",
+        "test:recovery",
+        "test:workflow",
+        "test:approval",
+        "test:approval:db",
+        "test:approval:headed",
+        "test:club:db",
+        "test:club:headed",
+        "test:volunteer:db",
+        "test:volunteer:headed",
+        "test:project:db",
+        "test:project:headed",
+        "test:fundraising",
+        "test:donations",
+        "test:finance-core",
+        "test:donations:db",
+        "test:donations:headed",
+        "test:fundraising:db",
+        "test:fundraising:headed",
+        "postinstall",
+        "db:migrate",
+        "db:deploy",
+        "db:seed",
+        "db:reset",
+        "db:studio",
+        "admin:create",
+        "vercel-build",
+        "db:seed:demo",
+        "db:demo:clear",
+        "db:reset-demo",
+        "demo:assets",
+        "db:audit-demo"
+      ],
+      "frameworks": [
+        "React",
+        "Next.js"
+      ],
+      "testing": [
+        "playwright"
+      ],
+      "manifest": "package.json",
+      "testFiles": [
+        "src/lib/approval/definition.test.ts",
+        "src/lib/finance/chart.test.ts",
+        "src/lib/finance/journal-core.test.ts",
+        "src/lib/validations/donations.test.ts",
+        "src/lib/validations/fundraising.test.ts",
+        "src/server/payments/provider.test.ts"
+      ],
+      "testFileCount": 6
+    }
+  ],
+  "databases": [
+    {
+      "technology": "ORM: Prisma",
+      "confidence": "high",
+      "declaredIn": [
+        "package.json"
+      ],
+      "importedIn": [
+        "prisma/demo/seed-demo.ts",
+        "prisma.config.ts",
+        "qa/reports/evidence/pre-fix-backup/src/auth.config.ts",
+        "scripts/audit-demo.ts",
+        "scripts/clear-demo.ts",
+        "scripts/create-admin.ts",
+        "scripts/seed-demo.ts",
+        "scripts/verify-approval-ui.ts",
+        "src/app/api/admin/media/route.ts",
+        "src/app/[locale]/verification/page.tsx",
+        "src/auth.config.ts",
+        "src/lib/db.ts",
+        "src/server/actions/admin/bulk.ts",
+        "src/server/actions/admin/clubs.ts",
+        "src/server/actions/admin/donations.ts",
+        "src/server/actions/admin/fundraising.ts",
+        "src/server/actions/admin/project-operations.ts",
+        "src/server/actions/admin-helpers.ts",
+        "src/server/actions/volunteer/records.ts",
+        "src/server/approval/foundation.ts"
+      ],
+      "mentionedIn": [
+        "prisma/migrations/20261025000000_phase1_approval_foundation/migration.sql",
+        "prisma/migrations/20261026073100_phase6_foreign_key_names/migration.sql",
+        "prisma/seed.ts",
+        "qa/discovery/repository-inventory.json",
+        "qa/discovery/requirements-inventory.json",
+        "qa/reports/findings-baseline.json",
+        "qa/reports/findings.bugs.json",
+        "qa/reports/findings.json",
+        "qa/reports/findings.orchestrator.json",
+        "qa/reports/findings.workflow.json"
+      ],
+      "referenceCount": 136,
+      "truncated": true,
+      "status": "POSSIBLE_INTEGRATION_REQUIRES_VERIFICATION"
+    },
+    {
+      "technology": "PostgreSQL",
+      "confidence": "medium",
+      "declaredIn": [],
+      "importedIn": [
+        "qa/reports/traceability.json"
+      ],
+      "mentionedIn": [
+        ".github/workflows/check.yml",
+        "prisma/migrations/20261025000000_phase1_approval_foundation/migration.sql",
+        "prisma/migrations/migration_lock.toml",
+        "qa/config/test-environment.json",
+        "qa/discovery/repository-inventory.json",
+        "qa/reports/findings.bugs.json",
+        "qa/reports/findings.json",
+        "qa/reports/findings.runtime.json",
+        "qa/reports/findings.workflow.json",
+        "qa/workflows/knowledge-graph.json"
+      ],
+      "referenceCount": 29,
+      "truncated": true,
+      "status": "POSSIBLE_INTEGRATION_REQUIRES_VERIFICATION"
+    },
+    {
+      "technology": "SQLite",
+      "confidence": "low",
+      "declaredIn": [],
+      "importedIn": [],
+      "mentionedIn": [
+        "qa/reports/findings.bugs.json",
+        "qa/reports/findings.json"
+      ],
+      "referenceCount": 2,
+      "truncated": false,
+      "status": "POSSIBLE_INTEGRATION_REQUIRES_VERIFICATION"
+    }
+  ],
+  "testFrameworks": [
+    "playwright"
+  ],
+  "integrations": [
+    {
+      "type": "schema or migration artifact",
+      "path": "prisma/migrations/20260930085332_init/migration.sql"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "prisma/migrations/20260930103253_demo_flags/migration.sql"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "prisma/migrations/20261025000000_phase1_approval_foundation/migration.sql"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "prisma/migrations/20261025010000_phase2_clubs/migration.sql"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "prisma/migrations/20261026054227_phase3_volunteers/migration.sql"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "prisma/migrations/20261026060814_phase4_projects_tasks/migration.sql"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "prisma/migrations/20261026064436_phase5_fundraising_drafts/migration.sql"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "prisma/migrations/20261026073000_phase6_donation_intake/migration.sql"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "prisma/migrations/20261026073100_phase6_foreign_key_names/migration.sql"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "prisma/migrations/migration_lock.toml"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "prisma/schema.prisma"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/AccessGroup.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/AccessGroupMembership.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/AccessGroupPermission.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/Activity.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/ActivityLog.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/AnnualReport.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/ApprovalDecision.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/ApprovalDelegation.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/ApprovalInstance.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/ApprovalPolicy.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/AuditEvent.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/Category.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/Certificate.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/Club.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/ClubDocument.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/ClubMembership.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/ClubMembershipHistory.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/ContactMessage.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/Document.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/Donation.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/DonationCampaign.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/DonationCampaignHistory.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/DonationEvidence.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/DonationHistory.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/DonationRequest.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/DonationRequestEvidence.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/DonationRequestHistory.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/DonorProfile.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/Faq.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/GalleryAlbum.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/GalleryImage.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/HistoryEvent.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/ImpactMetric.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/Media.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/NewsPost.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/NotificationOutbox.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/Permission.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/Project.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/ProjectClubActivity.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/ProjectClubAssignment.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/ProjectClubAssignmentHistory.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/ProjectMilestone.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/ProjectTask.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/ProjectTaskDependency.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/ProjectTaskEvidence.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/ProjectTaskHistory.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/RateLimit.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/SiteSetting.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/SocialLink.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/Story.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/TaskAssignment.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/Testimonial.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/Trustee.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/TrustObjective.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/TrustProfile.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/User.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/VerificationRecord.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/VolunteerAttendance.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/VolunteerAttendanceHistory.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/VolunteerAvailability.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/VolunteerProfile.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/VolunteerServiceLog.ts"
+    },
+    {
+      "type": "schema or migration artifact",
+      "path": "src/generated/prisma/models/VolunteerServiceLogHistory.ts"
+    }
+  ],
+  "ciConfigs": [
+    ".github/workflows/check.yml"
+  ],
+  "envVarNames": [
+    {
+      "name": "DATABASE_URL",
+      "declaredIn": ".env.example"
+    },
+    {
+      "name": "AUTH_SECRET",
+      "declaredIn": ".env.example"
+    },
+    {
+      "name": "AUTH_TRUST_HOST",
+      "declaredIn": ".env.example"
+    },
+    {
+      "name": "ADMIN_EMAIL",
+      "declaredIn": ".env.example"
+    },
+    {
+      "name": "ADMIN_PASSWORD",
+      "declaredIn": ".env.example"
+    },
+    {
+      "name": "ADMIN_NAME",
+      "declaredIn": ".env.example"
+    },
+    {
+      "name": "ADMIN_RESET_PASSWORD",
+      "declaredIn": ".env.example"
+    },
+    {
+      "name": "SEED_DEMO",
+      "declaredIn": ".env.example"
+    },
+    {
+      "name": "NEXT_PUBLIC_SITE_URL",
+      "declaredIn": ".env.example"
+    },
+    {
+      "name": "STORAGE_DRIVER",
+      "declaredIn": ".env.example"
+    },
+    {
+      "name": "BLOB_READ_WRITE_TOKEN",
+      "declaredIn": ".env.example"
+    },
+    {
+      "name": "UPLOAD_MAX_MB",
+      "declaredIn": ".env.example"
+    },
+    {
+      "name": "RESEND_API_KEY",
+      "declaredIn": ".env.example"
+    },
+    {
+      "name": "EMAIL_FROM",
+      "declaredIn": ".env.example"
+    },
+    {
+      "name": "CONTACT_NOTIFY_EMAIL",
+      "declaredIn": ".env.example"
+    }
+  ],
+  "apiArtifacts": [],
+  "counts": {
+    "filesSeen": 496,
+    "filesScannedForDataStores": 402,
+    "projects": 1,
+    "ecosystems": [
+      "javascript"
+    ],
+    "dataStoresHighConfidence": 1,
+    "dataStoresTotal": 3,
+    "apiArtifacts": 0,
+    "ciConfigs": 1,
+    "testFilesFound": 6,
+    "migrations": 9,
+    "durationMs": 455
+  },
+  "warnings": [],
+  "migrations": [
+    "prisma/migrations/20260930085332_init/migration.sql",
+    "prisma/migrations/20260930103253_demo_flags/migration.sql",
+    "prisma/migrations/20261025000000_phase1_approval_foundation/migration.sql",
+    "prisma/migrations/20261025010000_phase2_clubs/migration.sql",
+    "prisma/migrations/20261026054227_phase3_volunteers/migration.sql",
+    "prisma/migrations/20261026060814_phase4_projects_tasks/migration.sql",
+    "prisma/migrations/20261026064436_phase5_fundraising_drafts/migration.sql",
+    "prisma/migrations/20261026073000_phase6_donation_intake/migration.sql",
+    "prisma/migrations/20261026073100_phase6_foreign_key_names/migration.sql"
+  ]
+}

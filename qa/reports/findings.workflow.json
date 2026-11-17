@@ -1,0 +1,523 @@
+{
+  "run": {
+    "phase": "workflow",
+    "mode": "end-to-end workflow synthesis across phases 1-5",
+    "environment": "static analysis only — no application or database was started, no HTTP exchange was made",
+    "scope": "the six workflows named in the phase-6 brief; findings are cross-layer only — single-layer issues already filed by phases 1-5 are cited by id, not re-raised",
+    "confirmed_means": "confirmed by reading the source at the cited file:line, not by reproducing against a running application — the same convention phase 4 recorded in qa/architecture/api-inventory.md:126",
+    "generatedBy": "complete-application-qa — qa-workflow-analyst"
+  },
+  "findings": [
+    {
+      "id": "QA-FLOW-001",
+      "module": "Project operations",
+      "feature": "Task completion review — admin evidence upload",
+      "finding": "On the admin task row the private-evidence uploader is rendered and enabled for any task that is not APPROVED/CANCELLED, but the service refuses evidence for any status outside TODO/IN_PROGRESS — and that check sits above the ADMIN bypass. On a SUBMITTED or BLOCKED task, which is exactly when a reviewer wants to attach a file, the control always returns HTTP 409",
+      "severity": "Medium",
+      "status": "CONFIRMED",
+      "evidence": [
+        "src/components/admin/project-operations.tsx:58 — const closed = [\"APPROVED\", \"CANCELLED\"].includes(task.status)",
+        "src/components/admin/project-operations.tsx:60 — the same TaskRow renders the SUBMITTED-only review form and, separately, {!closed && <TaskEvidenceUpload taskId={task.id} />}",
+        "src/server/projects/service.ts:267 — if (!task || ![\"TODO\", \"IN_PROGRESS\"].includes(task.status) || …) throw new ProjectOperationError(\"TASK_UNAVAILABLE\", \"This task cannot accept evidence now.\")",
+        "src/server/projects/service.ts:268 — the actor.role !== \"ADMIN\" branch begins only after that status check, so the ADMIN bypass does not reach it",
+        "src/app/api/project-tasks/[id]/evidence/route.ts:46 — ProjectOperationError is mapped to a 409 response",
+        "src/components/volunteer/task-progress.tsx:12 — the volunteer-side component gates the same uploader on editable = status in TODO|IN_PROGRESS, which matches the server",
+        "qa/ui-audit/frontend-ui-audit.md:103 — phase 4 concluded that every status-gated button sampled in project-operations.tsx has an independent, matching server-side check"
+      ],
+      "reproduction": [
+        "Read src/components/admin/project-operations.tsx:58 and note that `closed` excludes only APPROVED and CANCELLED",
+        "Read the same file at :60 and note that the TaskEvidenceUpload block is gated on {!closed}, while the completion-review form above it is gated on task.status === \"SUBMITTED\" — so both render simultaneously for a submitted task",
+        "Read src/server/projects/service.ts:267 and confirm the accepted statuses are TODO and IN_PROGRESS only",
+        "Read src/server/projects/service.ts:268 and confirm the ADMIN branch is below that check, so no actor can bypass it",
+        "Conclude that an ADMIN who uploads evidence on a SUBMITTED or BLOCKED task receives 409 \"This task cannot accept evidence now.\" every time"
+      ],
+      "expected": "The admin uploader is hidden (or disabled with an explanation) for exactly the statuses the server refuses, matching the volunteer-side gate in task-progress.tsx:12",
+      "actual": "The uploader is visible and enabled on SUBMITTED and BLOCKED tasks and fails with a 409 on every attempt. A reviewer who wants to attach a document during completion review has no working path — the only workaround is to RETURN the task, which also notifies the volunteer and resets its status",
+      "root_cause": "Two different notions of 'task is open' coexist: the client's `closed` flag (terminal statuses only) and the service's evidence window (TODO/IN_PROGRESS only). The volunteer component adopted the service's definition; the admin component did not",
+      "uncertainty": null,
+      "affected_modules": [
+        "Project operations",
+        "Admin UI",
+        "Project task evidence"
+      ],
+      "user_impact": "A trust administrator reviewing a submitted task cannot attach supporting evidence and receives a confusing error on an enabled control. Combined with QA-FLOW-009 the practical result is that completion evidence can only ever be attached before submission",
+      "recommendation": "Replace {!closed} in src/components/admin/project-operations.tsx:60 with the same TODO|IN_PROGRESS test the volunteer component uses, or widen src/server/projects/service.ts:267 to accept SUBMITTED for ADMIN actors. Decide which, because the two choices give the reviewer different powers",
+      "regression_coverage": [
+        "Proposed: assert POST /api/project-tasks/<id>/evidence returns 409 for a SUBMITTED task and that the admin UI does not render the uploader for it",
+        "Proposed: assert the admin and volunteer components derive the uploader gate from one shared predicate"
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "QA-FLOW-002",
+      "module": "Media & evidence storage",
+      "feature": "Media deletion vs published content",
+      "finding": "deleteMedia() guards exactly one of the sixteen SetNull relations pointing at Media. Deleting a file used as a cover, photo, logo, thumbnail or document original on a PUBLISHED record succeeds, nulls the foreign key, removes the image from a live public page, and reports only \"File deleted\"",
+      "severity": "Medium",
+      "status": "CONFIRMED",
+      "evidence": [
+        "src/server/actions/admin/media.ts:51 — the only usage check counts Document{fileId, status:PUBLISHED, visibility:PUBLIC}",
+        "src/server/actions/admin/media.ts:53 — db.media.delete() runs for every other reference shape",
+        "src/server/actions/admin/media.ts:57 — the success message is the unconditional \"File deleted\"",
+        "src/server/actions/admin/media.ts:45 — the comment \"references are cleared by the schema\" is true for these relations but says nothing about the published-page consequence",
+        "prisma/schema.prisma:1576 — Document.originalFile onDelete: SetNull; the un-redacted original behind a published redacted document is not counted by the guard at media.ts:51, which checks fileId only",
+        "prisma/schema.prisma:1577 — Document.thumbnail onDelete: SetNull",
+        "prisma/schema.prisma:935 — Trustee.photo onDelete: SetNull",
+        "prisma/schema.prisma:1071 — Project.cover onDelete: SetNull",
+        "prisma/schema.prisma:1486 — Activity.cover onDelete: SetNull",
+        "prisma/schema.prisma:1769 — Story.cover onDelete: SetNull",
+        "prisma/schema.prisma:1854 — NewsPost.cover onDelete: SetNull",
+        "prisma/schema.prisma:1802 — GalleryAlbum.cover onDelete: SetNull",
+        "prisma/schema.prisma:1653 — Certificate.image onDelete: SetNull",
+        "prisma/schema.prisma:1621 — AnnualReport.cover onDelete: SetNull",
+        "prisma/schema.prisma:1730 — Testimonial.photo onDelete: SetNull",
+        "prisma/schema.prisma:990 — HistoryEvent.image onDelete: SetNull",
+        "prisma/schema.prisma:853 — TrustProfile.logo onDelete: SetNull",
+        "prisma/schema.prisma:854 — TrustProfile.heroImage onDelete: SetNull",
+        "prisma/schema.prisma:882 — SiteSetting.ogImage onDelete: SetNull",
+        "src/server/queries/public/shared.ts:101 — public reads filter on the owning record's status, not on whether its media survived, so a nulled cover simply renders without an image"
+      ],
+      "reproduction": [
+        "Read src/server/actions/admin/media.ts:46-58 and confirm the only pre-delete usage query is the Document.fileId count at :51",
+        "List every Media relation in prisma/schema.prisma by grepping for 'Media?* @relation' — 21 inbound relations: 4 Restrict, 1 Cascade, 16 SetNull",
+        "Confirm that 15 of the 16 SetNull relations are unguarded (only Document.fileId is checked, and only when the document is PUBLISHED and PUBLIC)",
+        "Pick any of them, e.g. Trustee.photoId at prisma/schema.prisma:935, and confirm a PUBLISHED trustee's photo can be deleted with no check and no warning"
+      ],
+      "expected": "Deleting media that a PUBLISHED record depends on is either refused with the same specific message used for documents, or confirmed with a count of the published items that will lose the image — consistent with REQ-DOC-005's intent",
+      "actual": "The delete succeeds, the FK is nulled, the public page silently loses the image, and the admin is told \"File deleted\". The un-redacted original of a published redacted document can also be removed silently, because the guard checks fileId and not originalFileId",
+      "root_cause": "REQ-DOC-005 was implemented as a single query against one relation. The remaining relations were added by later content phases and the guard was never generalised; the author's comment at media.ts:45 treats SetNull as harmless, which is true for referential integrity and false for the published page",
+      "uncertainty": null,
+      "affected_modules": [
+        "Media library",
+        "Documents & privacy",
+        "Trustees",
+        "Projects",
+        "Activities",
+        "Stories",
+        "News",
+        "Gallery",
+        "Certificates",
+        "Annual reports",
+        "Testimonials",
+        "Trust identity",
+        "Site settings"
+      ],
+      "user_impact": "An administrator tidying the media library can silently blank images on live public pages across thirteen content types, with no warning and no way to tell afterwards which page lost what — on a site whose purpose is a verifiable public record",
+      "recommendation": "Generalise the pre-delete check in deleteMedia(): count usage across every Media relation, grouped into (a) blocked while the owning record is PUBLISHED, and (b) permitted with an explicit count in the confirmation. QA-DB-001 already proposes the same treatment for the four Restrict tables and GalleryImage; one query set should cover all 21 relations",
+      "regression_coverage": [
+        "Proposed: for each of the 16 SetNull relations, assert deleteMedia() on media referenced by a PUBLISHED owner either refuses or reports a count, and never returns a bare \"File deleted\""
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "QA-FLOW-003",
+      "module": "Notifications",
+      "feature": "Review workflow triggering",
+      "finding": "Every review workflow is pull-only in both directions. The outbound half writes NotificationOutbox rows that no consumer ever sends, and the inbound half writes no row at all — requestClubMembership creates history and audit entries but no outbox row, so even a future delivery worker would never tell an administrator that a membership request is waiting",
+      "severity": "Medium",
+      "status": "CONFIRMED",
+      "evidence": [
+        "src/server/clubs/service.ts:141 — requestClubMembership's transaction ends with the AuditEvent; no notificationOutbox.create follows",
+        "src/server/clubs/service.ts:123 — by contrast inviteClubMember does write an outbox row (CLUB_INVITATION)",
+        "src/server/clubs/service.ts:161 — and reviewClubMembership writes one for the decision",
+        "src/server/volunteers/service.ts:66 — submitAttendance writes history and audit only, no outbox row",
+        "src/server/volunteers/service.ts:79 — submitServiceLog writes history and audit only, no outbox row",
+        "src/server/volunteers/service.ts:101 — the review decision does write an outbox row",
+        "src/server/projects/service.ts:226 — updateMyTask (including the submit-for-review transition) writes history and audit only, no outbox row",
+        "src/server/projects/service.ts:244 — the review decision does write one row per active assignee",
+        "src/app/admin/(dashboard)/approvals/page.tsx:20 — the only reader of NotificationOutbox anywhere: a findMany with take: 10, for display",
+        "qa/architecture/application-architecture.md:90 — phase 1 recorded that no cron, consumer or sender transitions a row from PENDING",
+        "src/lib/email.ts:16 — the only delivery primitive fails soft and returns false when RESEND_API_KEY/EMAIL_FROM are unset"
+      ],
+      "reproduction": [
+        "Grep src/server for notificationOutbox.create — every hit is a decision or invitation event; none is a submission event",
+        "Read src/server/clubs/service.ts:132-143 and confirm the request transaction writes ClubMembership, ClubMembershipHistory and AuditEvent only",
+        "Read src/server/volunteers/service.ts:65-69 and :78-80 and src/server/projects/service.ts:224-227 and confirm the same for the three other submission events",
+        "Grep for a consumer of NotificationOutbox — the only reference outside the writers is the display list at src/app/admin/(dashboard)/approvals/page.tsx:20"
+      ],
+      "expected": "A submitted record either notifies its reviewer, or appears in a queue the reviewer is directed to. Phase 1 already identified the missing delivery worker; the submission side should at minimum record the same outbox row so that adding the worker completes the loop",
+      "actual": "Three of the four submission events write no notification record of any kind. A membership request, an attendance submission, an hours submission and a task completion are all invisible until an administrator happens to open the relevant admin page. Adding a delivery worker later would fix the decision notifications and leave the submission notifications still missing, because the rows do not exist",
+      "root_cause": "The outbox was introduced for decision events (where a recipient id is obvious) and never extended to submission events (where the recipient is a role, not a user). The schema has no role-targeted recipient, so the submission case had no natural shape and was skipped",
+      "uncertainty": null,
+      "affected_modules": [
+        "Notifications",
+        "Club portal",
+        "Volunteer portal",
+        "Project operations",
+        "Admin — Approvals"
+      ],
+      "user_impact": "Membership requests, attendance, service hours and completed tasks can sit unreviewed indefinitely with nothing anywhere prompting a review. For a volunteer whose hours only count once approved, the delay is the whole user experience",
+      "recommendation": "Add an outbox row (or an explicit role-targeted review-queue record) on each of the four submission events, so that the single future delivery worker closes both halves of the loop. Until a worker exists, surface pending counts on the admin dashboard next to the existing unread-messages tile",
+      "regression_coverage": [
+        "Proposed: assert each of the four submission services writes exactly one PENDING notification record",
+        "Proposed: once a consumer exists, assert REQ-NOTIF-047 — a delivery failure never retries the business mutation"
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "QA-FLOW-004",
+      "module": "Club portal",
+      "feature": "Membership lifecycle",
+      "finding": "ClubMembershipStatus.SUSPENDED is a dead end: closeClubMembership can enter it, but no code path leaves it. The member cannot be reinstated, cannot be ended, and cannot re-request membership. ClubMembershipStatus.DRAFT is unreachable in the other direction — no writer sets it",
+      "severity": "Medium",
+      "status": "CONFIRMED",
+      "evidence": [
+        "prisma/schema.prisma:202 — ClubMembershipStatus declares DRAFT, INVITED, REQUESTED, ACTIVE, REJECTED, SUSPENDED, ENDED",
+        "src/server/clubs/service.ts:193 — closeClubMembership requires current.status === \"ACTIVE\", so it cannot act on a SUSPENDED row",
+        "src/server/clubs/service.ts:194 — it is also the only writer of SUSPENDED",
+        "src/server/clubs/service.ts:150 — reviewClubMembership requires status === \"REQUESTED\"",
+        "src/server/clubs/service.ts:136 — requestClubMembership permits a re-request only from INVITED, REJECTED or ENDED; SUSPENDED throws MEMBERSHIP_EXISTS",
+        "src/server/clubs/service.ts:117 — inviteClubMember permits re-invitation only from REJECTED or ENDED; SUSPENDED throws MEMBERSHIP_EXISTS",
+        "src/server/clubs/service.ts:172 — appointClubCoordinator requires member.status === \"ACTIVE\"",
+        "src/server/actions/admin/clubs.ts:112 — endMembership only offers SUSPENDED and ENDED as targets, and both route through closeClubMembership",
+        "src/server/clubs/service.ts:120 — the only other membership writer, and it writes INVITED; no writer anywhere sets DRAFT"
+      ],
+      "reproduction": [
+        "Read prisma/schema.prisma:202-210 and list the seven declared statuses",
+        "Grep src/server for every clubMembership.create and clubMembership.update* call — the only statuses ever written are INVITED, REQUESTED, ACTIVE, REJECTED, SUSPENDED and ENDED, so DRAFT has no writer",
+        "For SUSPENDED, check each of the four transition functions: reviewClubMembership requires REQUESTED (:150), closeClubMembership requires ACTIVE (:193), requestClubMembership excludes SUSPENDED (:136), inviteClubMember excludes SUSPENDED (:117)",
+        "Conclude that a suspended membership has no outbound transition in application code"
+      ],
+      "expected": "Either SUSPENDED has a documented reinstatement path (SUSPENDED → ACTIVE, by analogy with ClubStatus, which does allow SUSPENDED → ACTIVE at src/server/clubs/service.ts:67), or the status is not offered as a target in the admin UI",
+      "actual": "An administrator who suspends a membership has permanently removed that person from the club with no way back through the application: they cannot be reactivated, cannot be formally ended, and cannot re-apply. Their club-derived volunteer and project access is gone, and the only remedy is direct SQL",
+      "root_cause": "The Club status machine has an explicit transition table (service.ts:64-69) and allows SUSPENDED → ACTIVE. The membership lifecycle has no such table — each function checks one hard-coded precursor status, and no function was written with SUSPENDED as its precursor",
+      "uncertainty": null,
+      "affected_modules": [
+        "Club portal",
+        "Admin — Clubs",
+        "Volunteer portal",
+        "Project operations"
+      ],
+      "user_impact": "An irreversible destructive action presented as a reversible-sounding one. A member suspended by mistake is locked out of the club, their future attendance and hours, and every project task derived from that membership, with no in-application remedy",
+      "recommendation": "Add a SUSPENDED → ACTIVE transition (reason required, same version guard and history row as the other transitions) and a SUSPENDED → ENDED transition, or remove SUSPENDED from the endMembership target enum at src/server/actions/admin/clubs.ts:112. Also drop the unreachable DRAFT member from ClubMembershipStatus, or document why it is reserved",
+      "regression_coverage": [
+        "Proposed: assert every ClubMembershipStatus value has at least one writer and, unless terminal by design, at least one outbound transition",
+        "Proposed: assert a suspended membership can be reinstated and that reinstatement restores task and attendance access"
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "QA-FLOW-005",
+      "module": "Authentication",
+      "feature": "Auth configuration",
+      "finding": "authConfig.callbacks.authorized is dead code — nothing invokes it. src/proxy.ts implements its own cookie check and never imports authConfig, and no module exports NextAuth's auth as middleware. The comment above it states the config is shared by auth.ts and proxy.ts, which is false for this half",
+      "severity": "Low",
+      "status": "CONFIRMED",
+      "evidence": [
+        "src/auth.config.ts:19 — authorized({ auth, request }) returning a redirect for /admin/login and a boolean otherwise",
+        "src/auth.config.ts:5 — the comment: \"Provider-free config shared by `auth.ts` and `proxy.ts`\"",
+        "src/proxy.ts:1 — proxy.ts imports only next/server and @/lib/i18n/config; it never imports authConfig",
+        "src/proxy.ts:18 — it performs its own SESSION_COOKIES presence check instead",
+        "src/auth.ts:17 — auth.ts spreads authConfig, which is where the pages/session/jwt/session-callback halves do take effect",
+        "src/app/admin/login/page.tsx:15 — the already-signed-in redirect that authorized() would have performed is implemented independently in the page"
+      ],
+      "reproduction": [
+        "Grep the repository for authConfig — the only importer is src/auth.ts:5",
+        "Grep for 'as middleware' or an exported middleware/proxy that wraps NextAuth's auth() — there is none; src/proxy.ts:13 exports a plain function",
+        "Read src/auth.config.ts:19-26 and confirm the callback can only fire through NextAuth's middleware wrapper, which is not used",
+        "Confirm behaviour is unchanged: src/proxy.ts:18 covers the session requirement and src/app/admin/login/page.tsx:15 covers the logged-in-on-login-page redirect"
+      ],
+      "expected": "Configuration that cannot execute is either wired up or removed, and the comment describing it matches reality",
+      "actual": "A reviewer reading auth.config.ts reasonably concludes that an authorization callback runs on every matched request. It does not. The two behaviours it describes happen to be implemented elsewhere, so there is no present defect — but a future change that deletes the proxy check or the login-page redirect, trusting this callback as a backstop, would silently remove it",
+      "root_cause": "The project moved from NextAuth's middleware wrapper to a hand-written proxy (for locale negotiation) and the now-unreachable callback plus its comment were left behind",
+      "uncertainty": null,
+      "affected_modules": [
+        "Authentication",
+        "Edge proxy",
+        "Documentation"
+      ],
+      "user_impact": "None at runtime. It degrades every future security review of the auth path, which is the same failure mode already filed as QA-REQ-005 for the README",
+      "recommendation": "Delete callbacks.authorized from src/auth.config.ts and correct the comment at :5 to say the config shares pages, session and jwt/session callbacks with auth.ts only. If an edge authorization callback is wanted, wire the proxy through NextAuth's auth() wrapper and move the locale logic inside it",
+      "regression_coverage": [
+        "Proposed: a dead-code check for exported config callbacks with no reachable caller"
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "QA-FLOW-006",
+      "module": "Admin — Clubs",
+      "feature": "Club detail page queries",
+      "finding": "The club review screen loads every User row in the system, every membership of the club, and every history row of every membership, all unbounded — on the page an administrator must open to approve a single membership request",
+      "severity": "Medium",
+      "status": "CONFIRMED",
+      "evidence": [
+        "src/app/admin/(dashboard)/clubs/[id]/page.tsx:15 — club.findUnique includes memberships (no take) and, nested inside each membership, history (no take), plus documents (no take)",
+        "src/app/admin/(dashboard)/clubs/[id]/page.tsx:16 — db.user.findMany({ orderBy: { email: \"asc\" }, select: {...} }) with no take, to populate the invite picker",
+        "src/app/admin/(dashboard)/clubs/[id]/page.tsx:17 — by contrast the audit-history query on the same page is correctly capped with take: 30",
+        "src/app/admin/(dashboard)/clubs/[id]/page.tsx:24 — every membership is then serialised into the client component with userName, userEmail and its full history array",
+        "src/app/admin/(dashboard)/project-operations/[id]/page.tsx:21 — the comparable admin user picker elsewhere is capped with take: 500",
+        "src/app/admin/(dashboard)/project-operations/[id]/page.tsx:20 — and the comparable club list there is capped with take: 200",
+        "src/app/admin/(dashboard)/volunteers/page.tsx:22 — the comparable admin queue is paginated with skip/take 30",
+        "qa/architecture/api-inventory.md:136 — phase 4 explicitly recorded that a full pagination audit of admin list queries was not performed and that further instances of this pattern may exist"
+      ],
+      "reproduction": [
+        "Read src/app/admin/(dashboard)/clubs/[id]/page.tsx:14-18 and note that three of the four findMany/include lists have no take while the fourth does",
+        "Compare with src/app/admin/(dashboard)/project-operations/[id]/page.tsx:20-24, where every list on the equivalent screen is capped",
+        "Note the nested shape: memberships × history is a product, not a sum, so the row count grows with roster size multiplied by decision activity per member"
+      ],
+      "expected": "Every list on an admin screen is bounded, consistent with the take/skip convention used on /admin/volunteers, /admin/project-operations and the audit query on this very page",
+      "actual": "Opening /admin/clubs/<id> issues an unbounded select over the User table plus an unbounded nested select over memberships and their complete decision history, and serialises all of it into the client payload. On a deployment with many accounts this is the slowest and largest page in the admin surface, and it is the mandatory entry point for the membership-approval workflow",
+      "root_cause": "The page was written before the pagination convention settled, and the invite picker needs 'all users' as a conceptual input, which was implemented literally",
+      "uncertainty": "Severity is reasoned from query shape, not from a measured row count or query plan — no database exists in this environment (REQUIRES_VERIFICATION)",
+      "affected_modules": [
+        "Admin — Clubs",
+        "Club portal",
+        "Admin — Users"
+      ],
+      "user_impact": "The club membership approval workflow degrades as the account table and club rosters grow, on the one page the workflow cannot avoid. It also means every administrator's club screen carries every account's name and email in its payload",
+      "recommendation": "Cap and paginate the memberships and documents includes, cap the nested history (take: 5 is enough for the displayed summary), and replace the unbounded user query with a searchable, capped picker — matching take: 500 in project-operations/[id]/page.tsx:21 at minimum. This is the same remediation as QA-API-002, applied to the admin side",
+      "regression_coverage": [
+        "Proposed: seed 1000 users and a club with 200 members, then assert the /admin/clubs/<id> payload is bounded"
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "QA-FLOW-007",
+      "module": "Admin UI",
+      "feature": "Self-review controls",
+      "finding": "The admin review queues render the decision control for records belonging to the acting administrator. The SELF_APPROVAL ban is enforced only server-side, so the reviewer discovers it after submitting — and the chain that makes an administrator their own subject is fully open in code",
+      "severity": "Low",
+      "status": "SUSPECTED",
+      "evidence": [
+        "src/app/admin/(dashboard)/volunteers/page.tsx:24 — the attendance queue selects every row with the chosen status, with no exclusion of the acting administrator's own profile",
+        "src/app/admin/(dashboard)/volunteers/page.tsx:33 — VolunteerReview is rendered for every row returned",
+        "src/components/admin/volunteer-review.tsx:10 — the component has no actor-aware disable condition",
+        "src/server/volunteers/service.ts:92 — if (row.profile.userId === actorId) throw new VolunteerError(\"SELF_APPROVAL\", …)",
+        "src/server/volunteers/service.ts:106 — the same ban on the service-log branch",
+        "src/server/projects/service.ts:237 — reviewTaskCompletion throws SELF_APPROVAL when the actor is any assignee of the task",
+        "src/server/actions/volunteer/records.ts:16 — a volunteer profile is created behind getAdminUser() alone, with no role restriction, so an ADMIN can hold one",
+        "src/server/clubs/service.ts:129 — club membership is likewise role-agnostic, so an ADMIN can be an active club member and therefore submit attendance",
+        "qa/ui-audit/frontend-ui-audit.md:108 — phase 4 concluded no nav-visible-but-rejected action was found (for admin navigation); the review queues were not examined from the actor-identity angle"
+      ],
+      "reproduction": [
+        "Read src/server/actions/volunteer/records.ts:16 and src/server/clubs/service.ts:129 and confirm neither restricts the actor's Role, so an ADMIN can hold a volunteer profile and an active club membership",
+        "Read src/server/volunteers/service.ts:55-65 and confirm that such an ADMIN can submit attendance like any other volunteer",
+        "Read src/app/admin/(dashboard)/volunteers/page.tsx:24 and confirm the review queue query has no actor-based exclusion",
+        "Read src/components/admin/volunteer-review.tsx:10 and confirm the control is rendered unconditionally for every row"
+      ],
+      "expected": "A control the server will always reject is either not rendered or rendered disabled with the reason, as the codebase does elsewhere — for example the club contribution form is rendered only when canReportContribution and the project is ACTIVE (qa/ui-audit/frontend-ui-audit.md:55)",
+      "actual": "Not reproduced. By code reading, an administrator who also volunteers sees a working-looking Approve control on their own attendance and hours, and gets \"You cannot review your own record.\" after submitting. The security property holds in every case; only the affordance is wrong",
+      "root_cause": "The review queue was built as a status filter with no notion of the acting user, while the independence rule lives in the service layer",
+      "uncertainty": "Whether any real deployment has an ADMIN with a volunteer profile and an active club membership was not observed — no database exists in this environment. Confirm by seeding an ADMIN account with a consented volunteer profile and an active membership, submitting attendance as that account, then opening /admin/volunteers as the same account",
+      "affected_modules": [
+        "Admin UI",
+        "Volunteer portal",
+        "Project operations"
+      ],
+      "user_impact": "Minor confusion for a small-trust deployment where the same person administers and volunteers — which is the likely shape of a small charity. No authorization impact: the ban is correctly enforced server-side in all three places",
+      "recommendation": "Exclude the acting user's own records from the review queues (or render the control disabled with \"You cannot review your own record\"), mirroring the independence rule the services already enforce at volunteers/service.ts:92,106 and projects/service.ts:237",
+      "regression_coverage": [
+        "Proposed: assert /admin/volunteers does not render a decision control for a record owned by the acting administrator",
+        "Proposed: assert the server still rejects the action if the control is forced, so the UI change cannot become the only guard"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "id": "QA-FLOW-008",
+      "module": "Testing",
+      "feature": "Unit test suite targeting",
+      "finding": "Half the unit suite tests code with no consumer. Three of the six files in npm run test:unit exercise modules that nothing in src/ imports — src/server/payments/provider.ts, src/lib/finance/chart.ts and src/lib/finance/journal-core.ts — while none of the six critical business workflows has any unit coverage at all",
+      "severity": "Medium",
+      "status": "CONFIRMED",
+      "evidence": [
+        "package.json:11 — test:unit runs exactly six files: src/lib/approval/definition.test.ts, src/lib/validations/fundraising.test.ts, src/lib/validations/donations.test.ts, src/server/payments/provider.test.ts, src/lib/finance/chart.test.ts, src/lib/finance/journal-core.test.ts",
+        "package.json:12 — check = lint && typecheck && test:unit && build, so this is the gate",
+        "src/lib/finance/chart.ts — grepping src/ for '@/lib/finance' or 'lib/finance' outside src/lib/finance/ itself returns nothing: the module has no importer",
+        "src/lib/finance/journal-core.ts — same result",
+        "src/server/payments/provider.ts:17 — getLiveDonationProvider always throws PaymentUnavailableError; grepping src/ for 'payments/provider' outside its own test returns nothing",
+        "src/lib/validations/donations.test.ts — covers donorProfileSchema and manualDonationIntakeSchema only; no action, service or route is exercised",
+        "qa/reports/evidence/mechanical/test.log — the executed run, confirming which six files ran and that they passed",
+        "src/auth.ts:24 — authorize(), the login path, has no test",
+        "src/server/clubs/service.ts:146 — reviewClubMembership, including the SELF_APPROVAL ban, has no test",
+        "src/server/volunteers/service.ts:85 — reviewVolunteerRecord, including the void cascade that protects REQ-VOL-039, has no test",
+        "src/server/projects/service.ts:232 — reviewTaskCompletion, including its SELF_APPROVAL ban, has no test",
+        "src/server/actions/admin/media.ts:51 — the REQ-DOC-005 publication guard has no test"
+      ],
+      "reproduction": [
+        "Read package.json:11 and list the six files",
+        "For each of src/lib/finance/chart.ts, src/lib/finance/journal-core.ts and src/server/payments/provider.ts, grep src/ for an importer outside the module's own directory and its test — there is none",
+        "Grep the repository for a test that imports src/server/clubs/service.ts, src/server/volunteers/service.ts, src/server/projects/service.ts, src/server/donations/service.ts or src/server/auth-guard.ts — there is none",
+        "Conclude that the CI gate executes no line of the six traced workflows"
+      ],
+      "expected": "The suite that gates every commit covers the business rules the product depends on: the self-approval bans, the consent-version gates, the approved-hours invariant, the publication guards and the login limiter",
+      "actual": "The gate runs 6 files in under 2 seconds. Three test a Phase-7 ledger design and a payment provider that no code calls; the other three test pure schemas and definitions. Every service-layer invariant traced in this phase — and every authorization guard — is unguarded by the gate. The 19 scripts/verify-*.ts harnesses that would cover some of it need system Chrome and a disposable Postgres and are not part of npm run check",
+      "root_cause": "Test effort followed testability rather than risk: pure functions were easy to test in isolation, and the finance/payments modules were written test-first ahead of their consumers, while the service layer requires a database and was left to manual verification scripts",
+      "uncertainty": null,
+      "affected_modules": [
+        "Testing",
+        "Authentication",
+        "Club portal",
+        "Volunteer portal",
+        "Project operations",
+        "Donations",
+        "Media & evidence storage"
+      ],
+      "user_impact": "A regression that removes a self-approval ban, a consent-version check or a publication guard passes CI. This is the enabling condition behind QA-TEST-003 and behind the fact that QA-FLOW-001, QA-FLOW-002 and QA-FLOW-004 could exist undetected",
+      "recommendation": "Point the suite at the invariants rather than at the pure functions: add service-level tests for the three SELF_APPROVAL bans, the approved-hours aggregate, the consent-version gates and the media-deletion guards, using a disposable Postgres schema in CI (the workflow already provisions postgres:18 per qa/architecture/application-architecture.md:18). Keep the finance and payments tests, but mark those modules as pre-wired for Phase 7 so the coverage figure is not read as workflow coverage",
+      "regression_coverage": [
+        "Proposed: add npm run check:db (which already exists and runs the six migration verifiers) to CI, then add service-level invariant tests on top"
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "QA-FLOW-009",
+      "module": "Project operations",
+      "feature": "Completion evidence ordering",
+      "finding": "Completion evidence can only be attached before a task is submitted. Submitting moves the task to SUBMITTED, which closes the evidence window for the volunteer, and the only way to reopen it is for an administrator to RETURN the task. Neither UI states the ordering, and the copy implies the opposite",
+      "severity": "Low",
+      "status": "CONFIRMED",
+      "evidence": [
+        "src/server/projects/service.ts:267 — evidence is accepted only while the task status is TODO or IN_PROGRESS",
+        "src/server/projects/service.ts:223 — updateMyTask sets the status to SUBMITTED when the submit checkbox is ticked",
+        "src/components/volunteer/task-progress.tsx:11 — editable = [\"TODO\", \"IN_PROGRESS\"].includes(status) && !dependenciesOpen",
+        "src/components/volunteer/task-progress.tsx:12 — the uploader section is rendered only when editable, so it disappears the moment the task is submitted; the same line's copy reads \"A completion note is retained as evidence. Upload a supporting private file below when available.\"",
+        "src/server/projects/service.ts:239 — RETURN is the only transition back to IN_PROGRESS from SUBMITTED",
+        "src/components/projects/task-evidence-upload.tsx:22 — the Purpose select offers COMPLETION as an explicit evidence kind, implying it belongs to the completion step"
+      ],
+      "reproduction": [
+        "Read src/components/volunteer/task-progress.tsx:11-12 and note that the single `editable` flag gates the progress form and the uploader together",
+        "Read src/server/projects/service.ts:222-223 and confirm that ticking submit at 100% transitions the task to SUBMITTED in the same request",
+        "Read src/server/projects/service.ts:267 and confirm SUBMITTED is outside the evidence window",
+        "Conclude that a volunteer who sets 100% and submits in one action can never attach COMPLETION evidence for that submission"
+      ],
+      "expected": "Either the task accepts COMPLETION evidence while it is SUBMITTED, or the UI tells the volunteer to attach files before submitting — for example by disabling the submit checkbox until the uploader has been used, or by a one-line note above it",
+      "actual": "The uploader silently vanishes after submission and the volunteer has no path to add the file. The reviewer's only lever is RETURN, which resets the task to IN_PROGRESS, writes a history entry and notifies the volunteer — a heavyweight way to ask for an attachment. Combined with QA-FLOW-001 the administrator cannot attach it either",
+      "root_cause": "One `editable` flag governs two different capabilities whose natural windows differ: progress editing genuinely should stop at submission, evidence attachment arguably should not",
+      "uncertainty": null,
+      "affected_modules": [
+        "Volunteer portal",
+        "Project operations",
+        "Project task evidence"
+      ],
+      "user_impact": "A volunteer who submits before uploading cannot supply the evidence their completion is meant to be judged on, and nothing told them the order mattered. Reviews then proceed on the completion note alone",
+      "recommendation": "Decide the intended window and make all three layers agree. If evidence should accompany a submitted task, widen src/server/projects/service.ts:267 to include SUBMITTED and fix QA-FLOW-001 in the same change. If not, add an explicit note above the submit checkbox in src/components/volunteer/task-progress.tsx:12 stating that files must be attached first",
+      "regression_coverage": [
+        "Proposed: assert the evidence window and the UI gate are derived from one shared predicate on both the volunteer and admin surfaces"
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "QA-FLOW-010",
+      "module": "Donations",
+      "feature": "Donor portal end state and privacy copy",
+      "finding": "The donor portal hardcodes the status text instead of rendering the row's status, and asserts an anonymity guarantee that no code enforces. Both are harmless only because DonationStatus has exactly one member and no public donor display exists",
+      "severity": "Low",
+      "status": "CONFIRMED",
+      "evidence": [
+        "src/app/donor/page.tsx:18 — the status cell renders the literal string \"Pending verification\"; d.status is selected at :14 but never used",
+        "src/app/donor/page.tsx:19 — \"Donor records are private. Anonymous display is the default; no donor name or amount is published.\"",
+        "prisma/schema.prisma:65 — enum DonationStatus { PENDING_VERIFICATION } — one member only",
+        "prisma/migrations/20261026073000_phase6_donation_intake/migration.sql:81 — a SQL CHECK constraint pins the column to that value",
+        "src/server/donations/service.ts:55 — createPendingManualDonation hardcodes status: \"PENDING_VERIFICATION\"",
+        "src/server/donations/service.ts:21 — createDonorProfile never writes anonymousByDefault",
+        "prisma/schema.prisma:1384 — anonymousByDefault Boolean @default(true), with no reader anywhere (already filed as QA-REQ-007)",
+        "src/components/admin/donation-intake.tsx:26 — the control that would set it is checked and disabled, so its value never reaches the server",
+        "src/app/donor/page.tsx:14 — donations are capped at take: 100 with no pagination, so a donor with more entries cannot reach the older ones",
+        "qa/architecture/role-permission-matrix.md:28 — phase 1 recorded that the verification/receipt language in the docs has no enforcing code"
+      ],
+      "reproduction": [
+        "Read src/app/donor/page.tsx:14 and confirm status is selected",
+        "Read src/app/donor/page.tsx:18 and confirm the table cell contains a literal string rather than the selected value",
+        "Read src/app/donor/page.tsx:19 and confirm the anonymity sentence",
+        "Grep src/ for anonymousByDefault — the only hits are the schema default and a disabled form control; no reader exists"
+      ],
+      "expected": "A status column renders the record's status, and a user-facing privacy promise is either enforced by code or phrased as a statement of current scope (\"no donor display exists yet\") rather than as a policy guarantee",
+      "actual": "Correct today by coincidence: the hardcoded string happens to be the only possible status, and the anonymity claim is vacuously true because nothing public displays donors. Both will silently misstate reality the first time a second status or a public donor view is added — the hardcoded cell will show every donation as pending regardless of its real state",
+      "root_cause": "The Phase-6 gate made the single state and the absent public display safe assumptions, and both were written into the view layer as constants rather than as derivations",
+      "uncertainty": null,
+      "affected_modules": [
+        "Donations",
+        "Donor portal"
+      ],
+      "user_impact": "None today. The risk is a future phase: a donor seeing \"Pending verification\" against a verified donation is a trust failure on a transparency product, and an unwired anonymity default is exactly the trap QA-REQ-007 predicted",
+      "recommendation": "Render the status from d.status with a label map, add pagination to the donor history matching the /volunteer and /club patterns, and either wire anonymousByDefault or reword src/app/donor/page.tsx:19 to describe the current scope rather than a guarantee. Add the status-rendering and anonymity checks to the Phase-7 checklist alongside QA-REQ-007",
+      "regression_coverage": [
+        "Proposed: assert the donor status cell changes when the row's status changes (fails today by construction)",
+        "Proposed: assert no public query returns a donor identity once any public donor display exists"
+      ],
+      "confidence": "high"
+    },
+    {
+      "id": "QA-FLOW-011",
+      "module": "QA process",
+      "feature": "Findings traceability",
+      "finding": "Two phase-1 reports cite QA-NOTIFY-007 as a filed finding, but no such finding exists in qa/reports/findings.json. The notification-delivery gap — which three of the six traced workflows depend on — is described in prose in the architecture report and has no finding record, no severity and no owner",
+      "severity": "Low",
+      "status": "CONFIRMED",
+      "evidence": [
+        "qa/architecture/application-architecture.md:96 — \"The outbox is write-and-display only; no notification delivery exists.** Raised as finding QA-NOTIFY-007.\"",
+        "qa/architecture/role-permission-matrix.md:29 — \"Role-targeted notifications are **recorded, not delivered** — see QA-NOTIFY-007.\"",
+        "qa/discovery/database-inventory.md:69 — \"already documented in qa/architecture/application-architecture.md ... (QA-NOTIFY-007); not re-raised here\" — a third report deferring to the missing id",
+        "qa/reports/findings.json — the findings array contains 29 entries with ids in the QA-AUTH, QA-TEST, QA-I18N, QA-DATA, QA-REQ, QA-API, QA-UI and QA-DB series; there is no QA-NOTIFY entry",
+        "qa/discovery/requirements-inventory.md:68 — REQ-NOTIF-047 is recorded as UNVERIFIABLE for the same underlying reason, which is the only place the gap carries any formal status"
+      ],
+      "reproduction": [
+        "Grep qa/ for QA-NOTIFY-007 — three citations in three different phase reports",
+        "Search qa/reports/findings.json for \"QA-NOTIFY\" — no match",
+        "Note that qa/architecture/database-dependency-map.md:69 explicitly declines to re-raise the issue on the grounds that it is already filed, so the deferral chain terminates nowhere"
+      ],
+      "expected": "A finding referenced by three reports exists in findings.json with a severity, a status and a recommendation, so that it is triaged and tracked like the other 29",
+      "actual": "The most structurally significant gap found by phase 1 — no notification delivery anywhere in the application — exists only as prose. Each later phase correctly declined to duplicate it, citing an id that was never written. The merge script de-duplicates by id and cannot recover a finding that was never shipped in a shard",
+      "root_cause": "Phase 1 wrote the narrative report and the findings shard in separate passes; the id was allocated in the prose and the shard entry was not written",
+      "uncertainty": null,
+      "affected_modules": [
+        "QA process",
+        "Notifications"
+      ],
+      "user_impact": "None in the application. In the audit it means a cross-cutting gap affecting three workflows carries no severity, appears in no count, and would not reach a remediation plan built from findings.json",
+      "recommendation": "File the notification-delivery gap as a real finding (QA-NOTIFY-007, to keep the three existing citations valid), with the outbox writers and the single display-only reader as evidence. QA-FLOW-003 in this shard covers the adjacent and distinct defect — that the submission side writes no record at all — and should be cross-referenced rather than merged",
+      "regression_coverage": [],
+      "confidence": "high"
+    }
+  ],
+  "tests": [
+    {
+      "test_id": "TC-FLOW-001",
+      "workflow": "workflow.admin.login",
+      "type": "integration",
+      "status": "PROPOSED",
+      "reason": "No application or database was started in this environment; authorize() cannot be exercised without a Postgres instance and a seeded user",
+      "environment": "none"
+    },
+    {
+      "test_id": "TC-FLOW-002",
+      "workflow": "workflow.club.membership",
+      "type": "integration",
+      "status": "PROPOSED",
+      "reason": "Covers the SELF_APPROVAL ban, the consent-version re-check at approval and the SUSPENDED dead end (QA-FLOW-004); needs a disposable Postgres schema, which was not authorized for this run",
+      "environment": "none"
+    },
+    {
+      "test_id": "TC-FLOW-003",
+      "workflow": "workflow.volunteer.servicelog",
+      "type": "integration",
+      "status": "PROPOSED",
+      "reason": "Covers REQ-VOL-039 (approved minutes), the void cascade and the SELF_APPROVAL ban; needs a database",
+      "environment": "none"
+    },
+    {
+      "test_id": "TC-FLOW-004",
+      "workflow": "workflow.project.task",
+      "type": "api",
+      "status": "PROPOSED",
+      "reason": "Covers the evidence-window mismatch in QA-FLOW-001 and the three-actor authorization matrix on /api/task-evidence/[id]/file; needs a running server and a database",
+      "environment": "none"
+    },
+    {
+      "test_id": "TC-FLOW-005",
+      "workflow": "workflow.media.publish",
+      "type": "integration",
+      "status": "PROPOSED",
+      "reason": "Covers QA-FLOW-002 — one case per Media relation class (Restrict, Cascade, guarded SetNull, unguarded SetNull); needs a database",
+      "environment": "none"
+    },
+    {
+      "test_id": "TC-FLOW-006",
+      "workflow": "workflow.donation.intake",
+      "type": "integration",
+      "status": "PROPOSED",
+      "reason": "Covers the idempotency-key replay branch and the PENDING_VERIFICATION terminal state; needs a database",
+      "environment": "none"
+    }
+  ]
+}

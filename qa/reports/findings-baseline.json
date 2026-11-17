@@ -1,0 +1,216 @@
+{
+  "acceptedAt": "2026-11-16T10:29:39.839Z",
+  "commit": null,
+  "findings": [
+    {
+      "id": "QA-AUTH-001",
+      "module": "Authentication",
+      "feature": "Credentials login",
+      "finding": "Login brute-force protection has no per-account limiter; the only counter is keyed on client IP + email, so an attacker distributing attempts across IPs gets 5 attempts per source against a single known account",
+      "severity": "High",
+      "status": "CONFIRMED",
+      "evidence": [
+        "src/auth.ts:29 — limiterKey = `login:${hashIdentifier(`${await getClientIp()}:${email}`)}`",
+        "src/auth.ts:14 — LOGIN_RATE_LIMIT = { limit: 5, windowMs: 15 * 60 * 1000 }",
+        "src/server/actions/contact.ts:60 — the codebase already uses an IP-independent per-email limiter for the contact form"
+      ],
+      "reproduction": [
+        "Inspect src/auth.ts:29 — the limiter key includes the client IP",
+        "Grep for a second rateLimit() call in the authorize() flow keyed on email alone — there is none",
+        "Compare with src/server/actions/contact.ts:60, which does key a limiter on the email alone"
+      ],
+      "expected": "A second, IP-independent counter on the account identifier, as the contact form already does — so attempts against one account are capped regardless of source address",
+      "actual": "A single counter scoped to (IP, email). Each new source address resets the budget to 5 attempts per 15 minutes against the same account",
+      "root_cause": "The established per-identifier rate-limit pattern used elsewhere in the codebase was not applied to the login path",
+      "uncertainty": null,
+      "affected_modules": [
+        "Authentication",
+        "Admin portal",
+        "Club portal",
+        "Volunteer portal"
+      ],
+      "user_impact": "Credential-stuffing or password-spraying against a known admin email is materially cheaper than the 5-per-15-minutes limit implies",
+      "recommendation": "Add a second rateLimit() call keyed on `login:account:${hashIdentifier(email)}` with a wider window, and fail the attempt if either limiter trips. Keep the existing IP-scoped limiter for per-source throttling",
+      "regression_coverage": [
+        "Proposed: assert both limiters trip independently; assert a successful login resets only the IP-scoped key"
+      ],
+      "confidence": "high",
+      "fingerprint": "d3c8e5b139b465d7",
+      "lifecycle": "NEW",
+      "first_seen": "2026-11-16T10:29:39.839Z"
+    },
+    {
+      "id": "QA-AUTH-002",
+      "module": "Authentication",
+      "feature": "Client IP resolution",
+      "finding": "getClientIp() trusts the first entry of the X-Forwarded-For header, which is client-controlled unless the hosting proxy overwrites it",
+      "severity": "Medium",
+      "status": "SUSPECTED",
+      "evidence": [
+        "src/lib/rate-limit.ts:54 — const forwarded = h.get(\"x-forwarded-for\"); if (forwarded) return forwarded.split(\",\")[0]!.trim();",
+        "package.json — a vercel-build script is present, suggesting Vercel, whose proxy does overwrite X-Forwarded-For"
+      ],
+      "reproduction": [
+        "Send a login request with a forged X-Forwarded-For header on each attempt",
+        "Observe whether the rate-limit bucket changes per forged value"
+      ],
+      "expected": "The IP used for rate limiting is supplied by a trusted proxy and cannot be set by the client",
+      "actual": "Not verified at runtime. If any deployment path reaches the app without a header-normalizing proxy, the IP component of every rate-limit key becomes attacker-controlled",
+      "root_cause": "No trusted-proxy configuration or header allowlist; the header is read directly",
+      "uncertainty": "Exploitability depends entirely on the deployment topology. On Vercel the platform overwrites X-Forwarded-For and this is not exploitable. Confirm by sending a forged header to each deployed environment and checking whether the limiter bucket changes",
+      "affected_modules": [
+        "Authentication",
+        "Contact form"
+      ],
+      "user_impact": "If exploitable, every IP-scoped rate limit in the application can be bypassed at will",
+      "recommendation": "Document the trusted deployment topology, and prefer the platform's own IP accessor where one exists rather than parsing the header. If self-hosting is supported, read a fixed position from the right of the XFF chain based on the known proxy count",
+      "regression_coverage": [
+        "Proposed: forged-XFF test asserting the limiter key is stable"
+      ],
+      "confidence": "medium",
+      "fingerprint": "5340345ca9b0fef7",
+      "lifecycle": "NEW",
+      "first_seen": "2026-11-16T10:29:39.839Z"
+    },
+    {
+      "id": "QA-TEST-003",
+      "module": "Testing",
+      "feature": "API route coverage",
+      "finding": "None of the 12 API route handlers have automated test coverage, including the authorization and object-ownership checks that protect private file downloads",
+      "severity": "Medium",
+      "status": "CONFIRMED",
+      "evidence": [
+        "src/app/api/club/documents/[id]/file/route.ts:14 — ownership enforced via requireClubCoordinator, untested",
+        "src/app/api/task-evidence/[id]/file/route.ts — private file download keyed by id, untested",
+        "package.json — test:unit runs six files, all under src/lib and src/server/payments; none exercise a route handler",
+        "qa/reports/evidence/mechanical/test.log — the executed suite output, confirming which tests ran"
+      ],
+      "reproduction": [
+        "Run npm run test:unit and note the six files executed",
+        "Grep the repository for any test referencing /api/ — there are none"
+      ],
+      "expected": "The highest-risk code in the application — authorization and IDOR protection on private file routes — is covered by automated tests",
+      "actual": "Unit tests cover validation schemas, approval definitions and finance maths only. Route handlers are verified manually via the scripts/verify-*-ui.ts scripts, which are not assertions over authorization",
+      "root_cause": "Test strategy grew around pure functions; the HTTP boundary was never brought under test",
+      "uncertainty": null,
+      "affected_modules": [
+        "All API routes",
+        "Club portal",
+        "Volunteer portal",
+        "Admin media"
+      ],
+      "user_impact": "A regression that removes an ownership check would not be caught by any gate, including CI",
+      "recommendation": "Add route-handler tests invoking each GET/POST directly with three actor fixtures (anonymous, authenticated non-owner, owner) and assert 401/404/200 respectively. The 404-not-403 convention already in the code makes the expected values unambiguous",
+      "regression_coverage": [
+        "Proposed: one authz matrix test per route, wired into npm run check"
+      ],
+      "confidence": "high",
+      "fingerprint": "ffdaa1f53e81cbc2",
+      "lifecycle": "NEW",
+      "first_seen": "2026-11-16T10:29:39.839Z"
+    },
+    {
+      "id": "QA-AUTH-004",
+      "module": "Authentication",
+      "feature": "Login feedback",
+      "finding": "A rate-limited login returns the same null result as an invalid password, so a locked-out user receives \"invalid credentials\" with no indication they must wait",
+      "severity": "Low",
+      "status": "CONFIRMED",
+      "evidence": [
+        "src/auth.ts:31 — if (!limit.success) return null;",
+        "src/auth.ts:35 — if (!user || !valid) return null;"
+      ],
+      "reproduction": [
+        "Submit six failed logins for the same account from one address within 15 minutes",
+        "Observe that the sixth response is indistinguishable from the fifth"
+      ],
+      "expected": "The user learns that further attempts are temporarily blocked, with the reset time",
+      "actual": "Identical generic failure. A legitimate user who mistypes repeatedly will believe their password is wrong and may reset it unnecessarily",
+      "root_cause": "The limiter result is collapsed into the same null return as an authentication failure",
+      "uncertainty": null,
+      "affected_modules": [
+        "Authentication",
+        "Admin login UI"
+      ],
+      "user_impact": "Avoidable support load and unnecessary password resets; no security benefit, since the lockout is per-account-and-IP and already observable by timing",
+      "recommendation": "Surface a distinct, non-enumerating message such as \"Too many attempts. Try again after HH:MM.\" The resetAt value is already returned by rateLimit()",
+      "regression_coverage": [
+        "Proposed: assert the sixth attempt returns the throttled message"
+      ],
+      "confidence": "high",
+      "fingerprint": "6b5b1177f3ab8110",
+      "lifecycle": "NEW",
+      "first_seen": "2026-11-16T10:29:39.839Z"
+    },
+    {
+      "id": "QA-I18N-005",
+      "module": "Internationalization",
+      "feature": "Locale fallback",
+      "finding": "text() discards the resolved language and isFallback flag, so strings rendered through it carry no lang attribute when they fall back to the other language",
+      "severity": "Low",
+      "status": "CONFIRMED",
+      "evidence": [
+        "src/lib/i18n/localized.ts:47 — text() returns resolve(...)?.text and drops lang and isFallback",
+        "src/lib/i18n/localized.ts:34 — resolve() correctly computes both",
+        "src/components/i18n/tx.tsx:33 — the component path does set lang on fallback, showing the intended pattern",
+        "src/app/[locale]/certificates/page.tsx:48 — issuer={text(cert.issuer, locale)} renders visible text through the lossy path"
+      ],
+      "reproduction": [
+        "View a Tamil page where a record has no Tamil value",
+        "Inspect the rendered element for a lang attribute marking the English fallback"
+      ],
+      "expected": "Per WCAG 3.1.2, a passage in a different language from the page carries its own lang attribute",
+      "actual": "Values rendered through text() inherit the page language. Most of the 48 call sites are alt text and metadata, where this is unavoidable, but a few render visible body text",
+      "root_cause": "Two resolution helpers with different fidelity; the lossy one is the more convenient to call",
+      "uncertainty": null,
+      "affected_modules": [
+        "Public site",
+        "Certificates",
+        "Home page"
+      ],
+      "user_impact": "Screen readers announce fallback-language text with the wrong pronunciation rules",
+      "recommendation": "Audit the 48 text() call sites, and route the ones producing visible body text through the Tx component or resolve() so the lang attribute is preserved. Leave attribute and metadata uses as they are",
+      "regression_coverage": [
+        "Proposed: a lint rule or test forbidding text() in visible-content positions"
+      ],
+      "confidence": "medium",
+      "fingerprint": "04fa139b0b4c8ff8",
+      "lifecycle": "NEW",
+      "first_seen": "2026-11-16T10:29:39.839Z"
+    },
+    {
+      "id": "QA-DATA-006",
+      "module": "Impact metrics",
+      "feature": "Published figures",
+      "finding": "ImpactMetric.value is a Float while every monetary field in the schema correctly uses Decimal or BigInt",
+      "severity": "Informational",
+      "status": "CONFIRMED",
+      "evidence": [
+        "prisma/schema.prisma:1510 — value Float",
+        "prisma/schema.prisma:608 — amount Decimal? @db.Decimal(30, 8)",
+        "prisma/schema.prisma:1404 — amountPaise BigInt"
+      ],
+      "reproduction": [
+        "Inspect the ImpactMetric model in prisma/schema.prisma"
+      ],
+      "expected": "Published figures that may be summed or compared across periods use an exact numeric type",
+      "actual": "Float. Acceptable for display-only counts, but it will produce artifacts if these values are ever aggregated or compared for year-on-year equality, which the metricKey grouping comment anticipates",
+      "root_cause": "Display-oriented field typed before the year-on-year comparison use case was added",
+      "uncertainty": null,
+      "affected_modules": [
+        "Impact metrics",
+        "Public impact page"
+      ],
+      "user_impact": "None today. A latent source of off-by-a-fraction display and comparison bugs",
+      "recommendation": "Consider Decimal if these figures will ever be aggregated. No action needed if they remain display-only — record the decision either way",
+      "regression_coverage": [],
+      "confidence": "high",
+      "fingerprint": "3fa2c4c749894979",
+      "lifecycle": "NEW",
+      "first_seen": "2026-11-16T10:29:39.839Z",
+      "triage": "wontfix",
+      "triage_reason": "display-only metric, no aggregation planned",
+      "triaged_at": "2026-11-16T10:29:39.839Z"
+    }
+  ]
+}

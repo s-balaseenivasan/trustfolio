@@ -1,0 +1,113 @@
+{
+  "generatedAt": "2026-11-16T13:10:53.970Z",
+  "root": "C:\\Users\\balas\\Desktop\\Project\\trustfolio",
+  "mode": "PLAN_ONLY",
+  "detected": [
+    {
+      "id": "typecheck",
+      "kind": "types",
+      "command": "npm run typecheck",
+      "why": "package.json script \"typecheck\"",
+      "safe": true
+    },
+    {
+      "id": "lint",
+      "kind": "lint",
+      "command": "npm run lint",
+      "why": "package.json script \"lint\"",
+      "safe": true
+    },
+    {
+      "id": "test",
+      "kind": "test",
+      "command": "npm run test:unit",
+      "why": "package.json script \"test:unit\"",
+      "safe": true
+    },
+    {
+      "id": "build",
+      "kind": "build",
+      "command": "npm run build",
+      "why": "package.json script \"build\"",
+      "safe": false
+    },
+    {
+      "id": "prisma-validate",
+      "kind": "schema",
+      "command": "npx prisma validate",
+      "why": "prisma schema present",
+      "safe": true
+    },
+    {
+      "id": "secret-scan",
+      "kind": "security",
+      "command": "node \"C:\\Users\\balas\\.claude\\skills\\complete-application-qa\\scripts\\secret-scan.mjs\" \"C:\\Users\\balas\\Desktop\\Project\\trustfolio\"",
+      "why": "built-in repository secret scan",
+      "safe": true
+    },
+    {
+      "id": "npm-audit",
+      "kind": "security",
+      "command": "npm audit --audit-level=high",
+      "why": "package.json present",
+      "safe": true
+    }
+  ],
+  "findings": [],
+  "tests": [
+    {
+      "test_id": "MECH-typecheck",
+      "type": "unit",
+      "status": "PROPOSED",
+      "command": "npm run typecheck",
+      "reason": "plan-only run; not executed"
+    },
+    {
+      "test_id": "MECH-lint",
+      "type": "unit",
+      "status": "PROPOSED",
+      "command": "npm run lint",
+      "reason": "plan-only run; not executed"
+    },
+    {
+      "test_id": "MECH-test",
+      "type": "unit",
+      "status": "PROPOSED",
+      "command": "npm run test:unit",
+      "reason": "plan-only run; not executed"
+    },
+    {
+      "test_id": "MECH-build",
+      "type": "integration",
+      "status": "PROPOSED",
+      "command": "npm run build",
+      "reason": "gated: mutates the working tree"
+    },
+    {
+      "test_id": "MECH-prisma-validate",
+      "type": "db",
+      "status": "PROPOSED",
+      "command": "npx prisma validate",
+      "reason": "plan-only run; not executed"
+    },
+    {
+      "test_id": "MECH-secret-scan",
+      "type": "security",
+      "status": "PROPOSED",
+      "command": "node \"C:\\Users\\balas\\.claude\\skills\\complete-application-qa\\scripts\\secret-scan.mjs\" \"C:\\Users\\balas\\Desktop\\Project\\trustfolio\"",
+      "reason": "plan-only run; not executed"
+    },
+    {
+      "test_id": "MECH-npm-audit",
+      "type": "security",
+      "status": "PROPOSED",
+      "command": "npm audit --audit-level=high",
+      "reason": "plan-only run; not executed"
+    }
+  ],
+  "notes": [
+    "No accessibility or performance tooling installed. Either add axe-core and Lighthouse to the runtime phase, or record accessibility and performance as assessed by inspection only.",
+    "CI config found (.github/workflows). Read it — the commands it runs are known-good for this project and should override anything guessed here.",
+    "A process is listening on port 3000 and this project has a shared output directory (.next). A build would write into it and may regenerate modules that process has loaded — that has broken a running dev server before. Ask the developer to stop their instance, or skip the build."
+  ]
+}

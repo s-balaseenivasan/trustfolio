@@ -1,0 +1,1712 @@
+{
+  "generatedAt": "2026-11-16T13:00:36.630Z",
+  "root": "C:\\Users\\balas\\Desktop\\Project\\trustfolio",
+  "counts": {
+    "requirements": 47,
+    "implemented": 46,
+    "tested": 15,
+    "testsExecuted": 8,
+    "violatedOrPartial": 7,
+    "withOpenFindings": 23,
+    "graphNodes": 130,
+    "unspecifiedApiNodes": 3
+  },
+  "rows": [
+    {
+      "requirement": "REQ-DOC-001",
+      "statement": "A document that contains personal data may be PUBLIC+PUBLISHED only if isRedacted is set; otherwise it must stay private",
+      "module": "Documents & privacy",
+      "source": [
+        "README.md:76",
+        "APPLICATION_CONTEXT.md:86"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [],
+      "service": [
+        "documentSchema — published public document needs a public file; personal data needs isRedacted (REQ-DOC-001, REQ-DOC-004)"
+      ],
+      "entity": [],
+      "implemented_by": [
+        "src/lib/validations/admin.ts:285",
+        "src/server/actions/admin/bulk.ts:49",
+        "src/server/queries/public/shared.ts:102"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [
+        "QA-REQ-003",
+        "QA-REQ-004",
+        "QA-ROOT-004"
+      ],
+      "openFindings": [
+        "QA-REQ-003",
+        "QA-REQ-004",
+        "QA-ROOT-004"
+      ],
+      "gaps": [
+        "UNTESTED"
+      ]
+    },
+    {
+      "requirement": "REQ-DOC-002",
+      "statement": "Unredacted originals are stored as PRIVATE media and served only through an authenticated admin route",
+      "module": "Documents & privacy",
+      "source": [
+        "README.md:77",
+        "APPLICATION_CONTEXT.md:87"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [],
+      "service": [],
+      "entity": [],
+      "implemented_by": [
+        "src/lib/storage.ts:78",
+        "src/app/api/admin/media/[id]/file/route.ts:13"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [
+        "QA-AUTH-002",
+        "QA-API-001 (fixed)"
+      ],
+      "openFindings": [
+        "QA-AUTH-002"
+      ],
+      "gaps": [
+        "UNTESTED"
+      ]
+    },
+    {
+      "requirement": "REQ-DOC-003",
+      "statement": "The public-file slot must hold PUBLIC media and the original slot PRIVATE media",
+      "module": "Documents & privacy",
+      "source": [
+        "APPLICATION_CONTEXT.md:87",
+        "README.md:231"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [],
+      "service": [],
+      "entity": [],
+      "implemented_by": [
+        "src/server/actions/admin/evidence.ts:23, :26"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [],
+      "openFindings": [],
+      "gaps": [
+        "UNTESTED",
+        "NOT-IN-GRAPH"
+      ]
+    },
+    {
+      "requirement": "REQ-DOC-004",
+      "statement": "A published public document must have a public media file",
+      "module": "Documents & privacy",
+      "source": [
+        "APPLICATION_CONTEXT.md:107"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [],
+      "service": [
+        "documentSchema — published public document needs a public file; personal data needs isRedacted (REQ-DOC-001, REQ-DOC-004)"
+      ],
+      "entity": [],
+      "implemented_by": [
+        "src/lib/validations/admin.ts:289",
+        "src/server/actions/admin/bulk.ts:50",
+        "src/server/queries/public/shared.ts:101"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [
+        "QA-REQ-003",
+        "QA-REQ-004",
+        "QA-ROOT-004"
+      ],
+      "openFindings": [
+        "QA-REQ-003",
+        "QA-REQ-004",
+        "QA-ROOT-004"
+      ],
+      "gaps": [
+        "UNTESTED"
+      ]
+    },
+    {
+      "requirement": "REQ-DOC-005",
+      "statement": "Media deletion must be rejected while the file is used by a published public document",
+      "module": "Documents & privacy",
+      "source": [
+        "APPLICATION_CONTEXT.md:107",
+        "docs/requirements/trustfolio-srs.md:64"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [
+        "GET/POST /api/auth/[...nextauth] — NextAuth v5 handler, JWT session, 8h maxAge"
+      ],
+      "service": [
+        "deleteMedia — operational-private files refused to non-ADMIN, published PUBLIC Document.fileId usage blocked (REQ-DOC-005); no other reference is checked",
+        "requireAdmin(role?) — throws UnauthorizedError; PORTAL_USER always denied",
+        "expire() — updateTag per cache tag plus refresh(); direct DB and seed writes bypass it",
+        "getAdminUser() — re-reads the User row from Postgres on every request (REQ-SEC-026)",
+        "Credentials.authorize — rate limit, bcrypt compare against DUMMY_HASH when user absent, lastLoginAt + ActivityLog in one transaction",
+        "rateLimit() — Postgres fixed-window counter, raw SQL upsert on RateLimit.key"
+      ],
+      "entity": [
+        "Media (Postgres row + filesystem/Blob bytes) — storageKey unique; 16 inbound SetNull relations, 4 Restrict, 1 Cascade; uploadedById unindexed",
+        "Document (Postgres) — file / originalFile / thumbnail all onDelete SetNull; isRedacted, containsPersonalData, visibility, status",
+        "User (Postgres) — Role ADMIN|EDITOR|PORTAL_USER; ~25 inbound relations, nearly all onDelete Restrict",
+        "ActivityLog (Postgres) — written by login and every admin mutation; userId onDelete SetNull and unindexed",
+        "RateLimit (Postgres) — PK on key confirmed in init migration SQL"
+      ],
+      "implemented_by": [
+        "src/server/actions/admin/media.ts:51"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [
+        "QA-REQ-001",
+        "QA-UI-002",
+        "QA-DB-001 (fixed)",
+        "QA-DB-005",
+        "QA-FLOW-002 (fixed)",
+        "QA-FLOW-008",
+        "QA-ROOT-002",
+        "QA-ROOT-005",
+        "QA-ROOT-009"
+      ],
+      "openFindings": [
+        "QA-REQ-001",
+        "QA-UI-002",
+        "QA-DB-005",
+        "QA-FLOW-008",
+        "QA-ROOT-002",
+        "QA-ROOT-005",
+        "QA-ROOT-009"
+      ],
+      "gaps": [
+        "UNTESTED"
+      ]
+    },
+    {
+      "requirement": "REQ-DOC-006",
+      "statement": "Private media never reaches a public DTO, even when linked by mistake",
+      "module": "Documents & privacy",
+      "source": [
+        "APPLICATION_CONTEXT.md:87"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [],
+      "service": [],
+      "entity": [],
+      "implemented_by": [
+        "src/server/queries/public/shared.ts:40, :122"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [],
+      "openFindings": [],
+      "gaps": [
+        "UNTESTED",
+        "NOT-IN-GRAPH"
+      ]
+    },
+    {
+      "requirement": "REQ-MEDIA-007",
+      "statement": "Operational private namespaces (club, task, fundraising, donation) are excluded from legacy editor media lists, file reads, metadata edits and document-original linking",
+      "module": "Media library",
+      "source": [
+        "APPLICATION_CONTEXT.md:87",
+        "docs/security/permissions-matrix.md:5"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [
+        "GET /api/admin/media — operational-private prefixes hidden from non-ADMIN (REQ-MEDIA-007); backing query capped at 500 with no pagination (QA-DB-006)",
+        "GET/POST /api/auth/[...nextauth] — NextAuth v5 handler, JWT session, 8h maxAge"
+      ],
+      "service": [
+        "requireAdmin(role?) — throws UnauthorizedError; PORTAL_USER always denied",
+        "getAdminUser() — re-reads the User row from Postgres on every request (REQ-SEC-026)",
+        "Credentials.authorize — rate limit, bcrypt compare against DUMMY_HASH when user absent, lastLoginAt + ActivityLog in one transaction",
+        "rateLimit() — Postgres fixed-window counter, raw SQL upsert on RateLimit.key"
+      ],
+      "entity": [
+        "Media (Postgres row + filesystem/Blob bytes) — storageKey unique; 16 inbound SetNull relations, 4 Restrict, 1 Cascade; uploadedById unindexed",
+        "User (Postgres) — Role ADMIN|EDITOR|PORTAL_USER; ~25 inbound relations, nearly all onDelete Restrict",
+        "ActivityLog (Postgres) — written by login and every admin mutation; userId onDelete SetNull and unindexed",
+        "RateLimit (Postgres) — PK on key confirmed in init migration SQL"
+      ],
+      "implemented_by": [
+        "src/server/queries/admin.ts:366",
+        "src/app/api/admin/media/route.ts:23",
+        "src/app/api/admin/media/[id]/file/route.ts:19",
+        "src/server/actions/admin/media.ts:35",
+        "src/server/actions/admin/evidence.ts:29"
+      ],
+      "tests": [
+        "scripts/verify-club-ui.ts:129"
+      ],
+      "executed": true,
+      "findings": [
+        "QA-DB-006",
+        "QA-ROOT-003"
+      ],
+      "openFindings": [
+        "QA-DB-006",
+        "QA-ROOT-003"
+      ],
+      "gaps": []
+    },
+    {
+      "requirement": "REQ-CON-008",
+      "statement": "A trustee profile cannot be published without recorded consent (form, bulk and every public read)",
+      "module": "Consent",
+      "source": [
+        "README.md:75",
+        "APPLICATION_CONTEXT.md:85"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [],
+      "service": [
+        "documentSchema — published public document needs a public file; personal data needs isRedacted (REQ-DOC-001, REQ-DOC-004)"
+      ],
+      "entity": [],
+      "implemented_by": [
+        "src/lib/validations/admin.ts:98",
+        "src/server/actions/admin/bulk.ts:44",
+        "src/server/queries/public/trust.ts:201",
+        "src/server/queries/public/search.ts:74"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [
+        "QA-REQ-003",
+        "QA-REQ-004",
+        "QA-ROOT-004"
+      ],
+      "openFindings": [
+        "QA-REQ-003",
+        "QA-REQ-004",
+        "QA-ROOT-004"
+      ],
+      "gaps": [
+        "UNTESTED"
+      ]
+    },
+    {
+      "requirement": "REQ-CON-009",
+      "statement": "A testimonial cannot be published without recorded consent",
+      "module": "Consent",
+      "source": [
+        "README.md:75",
+        "APPLICATION_CONTEXT.md:85"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [],
+      "service": [
+        "documentSchema — published public document needs a public file; personal data needs isRedacted (REQ-DOC-001, REQ-DOC-004)"
+      ],
+      "entity": [],
+      "implemented_by": [
+        "src/lib/validations/admin.ts:235",
+        "src/server/actions/admin/bulk.ts:45",
+        "src/server/queries/public/trust.ts:311"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [
+        "QA-REQ-003",
+        "QA-REQ-004",
+        "QA-ROOT-004"
+      ],
+      "openFindings": [
+        "QA-REQ-003",
+        "QA-REQ-004",
+        "QA-ROOT-004"
+      ],
+      "gaps": [
+        "UNTESTED"
+      ]
+    },
+    {
+      "requirement": "REQ-CON-010",
+      "statement": "A story cannot be published without recorded consent",
+      "module": "Consent",
+      "source": [
+        "README.md:75",
+        "APPLICATION_CONTEXT.md:85"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [],
+      "service": [
+        "documentSchema — published public document needs a public file; personal data needs isRedacted (REQ-DOC-001, REQ-DOC-004)"
+      ],
+      "entity": [],
+      "implemented_by": [
+        "src/lib/validations/admin.ts:258",
+        "src/server/actions/admin/bulk.ts:46",
+        "src/server/queries/public/work.ts:143",
+        "src/server/queries/public/search.ts:88"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [
+        "QA-REQ-003",
+        "QA-REQ-004",
+        "QA-ROOT-004"
+      ],
+      "openFindings": [
+        "QA-REQ-003",
+        "QA-REQ-004",
+        "QA-ROOT-004"
+      ],
+      "gaps": [
+        "UNTESTED"
+      ]
+    },
+    {
+      "requirement": "REQ-MET-011",
+      "statement": "A published impact figure must have a method, a source document or an annual report",
+      "module": "Impact metrics",
+      "source": [
+        "README.md:78",
+        "APPLICATION_CONTEXT.md:88"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [],
+      "service": [
+        "documentSchema — published public document needs a public file; personal data needs isRedacted (REQ-DOC-001, REQ-DOC-004)"
+      ],
+      "entity": [],
+      "implemented_by": [
+        "src/lib/validations/admin.ts:212",
+        "src/server/actions/admin/bulk.ts:53"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [
+        "QA-REQ-003",
+        "QA-REQ-004",
+        "QA-ROOT-004"
+      ],
+      "openFindings": [
+        "QA-REQ-003",
+        "QA-REQ-004",
+        "QA-ROOT-004"
+      ],
+      "gaps": [
+        "UNTESTED"
+      ]
+    },
+    {
+      "requirement": "REQ-MET-012",
+      "statement": "Figures in different units are never added together",
+      "module": "Impact metrics",
+      "source": [
+        "README.md:27"
+      ],
+      "verdict": "PARTIAL",
+      "ui": [],
+      "api": [],
+      "service": [],
+      "entity": [],
+      "implemented_by": [
+        "no summation exists",
+        "src/app/[locale]/impact/page.tsx:39 groups by metricKey only"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [],
+      "openFindings": [],
+      "gaps": [
+        "UNTESTED",
+        "PARTIAL",
+        "NOT-IN-GRAPH"
+      ]
+    },
+    {
+      "requirement": "REQ-MET-013",
+      "statement": "Every published figure shows its period, how it was counted and its source",
+      "module": "Impact metrics",
+      "source": [
+        "README.md:25",
+        "APPLICATION_CONTEXT.md:88"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [],
+      "service": [],
+      "entity": [],
+      "implemented_by": [
+        "src/lib/view-models.ts:27",
+        "src/components/impact/metric-tiles.tsx:55",
+        "src/app/[locale]/impact/page.tsx:120"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [
+        "QA-REQ-004",
+        "QA-ROOT-004"
+      ],
+      "openFindings": [
+        "QA-REQ-004",
+        "QA-ROOT-004"
+      ],
+      "gaps": [
+        "UNTESTED",
+        "NOT-IN-GRAPH"
+      ]
+    },
+    {
+      "requirement": "REQ-VER-014",
+      "statement": "A published verification record must point to a document or an external registry/issuer link",
+      "module": "Verification records",
+      "source": [
+        "README.md:79"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [],
+      "service": [],
+      "entity": [],
+      "implemented_by": [
+        "src/lib/validations/admin.ts:344, :348"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [],
+      "openFindings": [],
+      "gaps": [
+        "UNTESTED",
+        "NOT-IN-GRAPH"
+      ]
+    },
+    {
+      "requirement": "REQ-VER-015",
+      "statement": "A verification record's document source counts only when that document is itself public, published and has a public file",
+      "module": "Verification records",
+      "source": [
+        "APPLICATION_CONTEXT.md:89"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [
+        "Media library — filter pills, search, visibility toggle, upload; delete dialog copy contradicts the server rule (QA-UI-002)",
+        "MediaPicker — attaches a Media id into a hidden input on every content form"
+      ],
+      "api": [
+        "POST /api/admin/upload — host-only same-origin, requireAdmin (ADMIN or EDITOR), rate limit 120/h, size/MIME/magic-byte, no compensating delete (QA-DB-003)",
+        "GET /api/admin/media — operational-private prefixes hidden from non-ADMIN (REQ-MEDIA-007); backing query capped at 500 with no pagination (QA-DB-006)",
+        "GET/POST /api/auth/[...nextauth] — NextAuth v5 handler, JWT session, 8h maxAge"
+      ],
+      "service": [
+        "WF5 — Admin uploads media, attaches it to a document, publishes publicly",
+        "saveDocument — public slot must be PUBLIC media, original slot must be PRIVATE and non-operational; publishedAt stamped once; expires 6 cache tags",
+        "documentSchema — published public document needs a public file; personal data needs isRedacted (REQ-DOC-001, REQ-DOC-004)",
+        "requireAdmin(role?) — throws UnauthorizedError; PORTAL_USER always denied",
+        "expire() — updateTag per cache tag plus refresh(); direct DB and seed writes bypass it",
+        "deleteMedia — operational-private files refused to non-ADMIN, published PUBLIC Document.fileId usage blocked (REQ-DOC-005); no other reference is checked",
+        "rateLimit() — Postgres fixed-window counter, raw SQL upsert on RateLimit.key",
+        "getAdminUser() — re-reads the User row from Postgres on every request (REQ-SEC-026)",
+        "Credentials.authorize — rate limit, bcrypt compare against DUMMY_HASH when user absent, lastLoginAt + ActivityLog in one transaction"
+      ],
+      "entity": [
+        "Media (Postgres row + filesystem/Blob bytes) — storageKey unique; 16 inbound SetNull relations, 4 Restrict, 1 Cascade; uploadedById unindexed",
+        "Document (Postgres) — file / originalFile / thumbnail all onDelete SetNull; isRedacted, containsPersonalData, visibility, status",
+        "ActivityLog (Postgres) — written by login and every admin mutation; userId onDelete SetNull and unindexed",
+        "RateLimit (Postgres) — PK on key confirmed in init migration SQL",
+        "User (Postgres) — Role ADMIN|EDITOR|PORTAL_USER; ~25 inbound relations, nearly all onDelete Restrict"
+      ],
+      "implemented_by": [
+        "src/server/actions/admin/evidence.ts:80",
+        "src/server/actions/admin/bulk.ts:54",
+        "src/server/queries/public/shared.ts:105"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [
+        "QA-REQ-001"
+      ],
+      "openFindings": [
+        "QA-REQ-001"
+      ],
+      "gaps": [
+        "UNTESTED"
+      ]
+    },
+    {
+      "requirement": "REQ-VER-016",
+      "statement": "A bare registration number is not inspectable evidence of registration",
+      "module": "Verification records",
+      "source": [
+        "APPLICATION_CONTEXT.md:107"
+      ],
+      "verdict": "PARTIAL",
+      "ui": [],
+      "api": [],
+      "service": [],
+      "entity": [],
+      "implemented_by": [
+        "coverage src/server/queries/public/evidence.ts:222",
+        "hero chip src/components/trust/hero.tsx:26"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [],
+      "openFindings": [],
+      "gaps": [
+        "UNTESTED",
+        "PARTIAL",
+        "NOT-IN-GRAPH"
+      ]
+    },
+    {
+      "requirement": "REQ-EVC-017",
+      "statement": "There is no trust score: an evidence area is ticked only when published records exist",
+      "module": "Evidence Center",
+      "source": [
+        "README.md:29",
+        "APPLICATION_CONTEXT.md:81"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [],
+      "service": [],
+      "entity": [],
+      "implemented_by": [
+        "src/server/queries/public/evidence.ts:204"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [
+        "QA-REQ-002",
+        "QA-ROOT-004"
+      ],
+      "openFindings": [
+        "QA-REQ-002",
+        "QA-ROOT-004"
+      ],
+      "gaps": [
+        "UNTESTED",
+        "NOT-IN-GRAPH"
+      ]
+    },
+    {
+      "requirement": "REQ-PUB-018",
+      "statement": "Placeholder text is treated as missing and left out of structured data",
+      "module": "Public site",
+      "source": [
+        "README.md:80",
+        "APPLICATION_CONTEXT.md:90"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [],
+      "service": [],
+      "entity": [],
+      "implemented_by": [
+        "src/server/queries/public/trust.ts:31",
+        "src/lib/seo.ts:107"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [
+        "QA-REQ-001"
+      ],
+      "openFindings": [
+        "QA-REQ-001"
+      ],
+      "gaps": [
+        "UNTESTED",
+        "NOT-IN-GRAPH"
+      ]
+    },
+    {
+      "requirement": "REQ-DEMO-019",
+      "statement": "While any published demo record is visible: banner, noindex, and no Organization structured data",
+      "module": "Demo data",
+      "source": [
+        "README.md:160",
+        "APPLICATION_CONTEXT.md:107"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [],
+      "service": [],
+      "entity": [],
+      "implemented_by": [
+        "src/server/queries/public/trust.ts:331",
+        "src/app/[locale]/page.tsx:52",
+        "src/app/[locale]/layout.tsx:37"
+      ],
+      "tests": [
+        "scripts/audit-demo.ts:113"
+      ],
+      "executed": true,
+      "findings": [
+        "QA-REQ-001"
+      ],
+      "openFindings": [
+        "QA-REQ-001"
+      ],
+      "gaps": [
+        "NOT-IN-GRAPH"
+      ]
+    },
+    {
+      "requirement": "REQ-PUB-020",
+      "statement": "No public UI element asserts verification that published records do not support",
+      "module": "Public site",
+      "source": [
+        "README.md:3",
+        "APPLICATION_CONTEXT.md:88"
+      ],
+      "verdict": "VIOLATED",
+      "ui": [],
+      "api": [],
+      "service": [],
+      "entity": [],
+      "implemented_by": [
+        "mostly enforced",
+        "src/lib/view-models.ts:103 and src/components/interactive/testimonial-carousel.tsx:103 publish a \"Relationship confirmed by the trust\" badge from an unconstrained checkbox"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [],
+      "openFindings": [],
+      "gaps": [
+        "UNTESTED",
+        "VIOLATED",
+        "NOT-IN-GRAPH"
+      ]
+    },
+    {
+      "requirement": "REQ-PUB-021",
+      "statement": "No public query returns private club, volunteer, task or donation data; the public project read is a field allowlist",
+      "module": "Public site",
+      "source": [
+        "docs/requirements/trustfolio-frd.md:44",
+        "APPLICATION_CONTEXT.md:60"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [],
+      "service": [],
+      "entity": [],
+      "implemented_by": [
+        "src/server/queries/public/work.ts:255",
+        "no club/volunteer/donation model is referenced under src/server/queries/public/"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [],
+      "openFindings": [],
+      "gaps": [
+        "UNTESTED",
+        "NOT-IN-GRAPH"
+      ]
+    },
+    {
+      "requirement": "REQ-I18N-022",
+      "statement": "Tamil is never generated automatically; untranslated text falls back to English with a lang attribute and a visible note",
+      "module": "Internationalization",
+      "source": [
+        "README.md:81",
+        "APPLICATION_CONTEXT.md:9"
+      ],
+      "verdict": "PARTIAL",
+      "ui": [],
+      "api": [],
+      "service": [],
+      "entity": [],
+      "implemented_by": [
+        "src/lib/i18n/localized.ts:34",
+        "src/components/i18n/tx.tsx:33"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [
+        "QA-I18N-005",
+        "QA-ROOT-001"
+      ],
+      "openFindings": [
+        "QA-I18N-005",
+        "QA-ROOT-001"
+      ],
+      "gaps": [
+        "UNTESTED",
+        "PARTIAL",
+        "NOT-IN-GRAPH"
+      ]
+    },
+    {
+      "requirement": "REQ-I18N-023",
+      "statement": "Every public URL is prefixed with /en or /ta",
+      "module": "Internationalization",
+      "source": [
+        "README.md:105"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [],
+      "service": [],
+      "entity": [],
+      "implemented_by": [
+        "src/proxy.ts:30 (portals excluded by design, src/proxy.ts:27)"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [],
+      "openFindings": [],
+      "gaps": [
+        "UNTESTED",
+        "NOT-IN-GRAPH"
+      ]
+    },
+    {
+      "requirement": "REQ-SEC-024",
+      "statement": "EDITOR cannot reach trust profile, settings, navigation, social links or users — enforced on the server for both page and action",
+      "module": "Authentication & authorization",
+      "source": [
+        "README.md:54",
+        "APPLICATION_CONTEXT.md:54"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [],
+      "service": [],
+      "entity": [],
+      "implemented_by": [
+        "pages src/app/admin/(dashboard)/trust/page.tsx:24, settings/page.tsx:21, navigation/page.tsx:14, social/page.tsx:15, users/page.tsx:10",
+        "actions src/server/actions/admin/settings.ts:26, :118",
+        "src/server/actions/admin/trust.ts:25"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [],
+      "openFindings": [],
+      "gaps": [
+        "UNTESTED",
+        "NOT-IN-GRAPH"
+      ]
+    },
+    {
+      "requirement": "REQ-SEC-025",
+      "statement": "PORTAL_USER is denied every /admin page and action",
+      "module": "Authentication & authorization",
+      "source": [
+        "README.md:55",
+        "APPLICATION_CONTEXT.md:56"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [],
+      "service": [],
+      "entity": [],
+      "implemented_by": [
+        "src/server/auth-guard.ts:36, :45"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [],
+      "openFindings": [],
+      "gaps": [
+        "UNTESTED",
+        "NOT-IN-GRAPH"
+      ]
+    },
+    {
+      "requirement": "REQ-SEC-026",
+      "statement": "The session user is re-read from the database on every request, so deleting an account revokes access immediately",
+      "module": "Authentication & authorization",
+      "source": [
+        "APPLICATION_CONTEXT.md:54"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [
+        "GET/POST /api/auth/[...nextauth] — NextAuth v5 handler, JWT session, 8h maxAge"
+      ],
+      "service": [
+        "getAdminUser() — re-reads the User row from Postgres on every request (REQ-SEC-026)",
+        "requireAdminPage(role?) — redirect: no user to /admin/login, PORTAL_USER to /club, non-ADMIN to /admin",
+        "requireAdmin(role?) — throws UnauthorizedError; PORTAL_USER always denied",
+        "Credentials.authorize — rate limit, bcrypt compare against DUMMY_HASH when user absent, lastLoginAt + ActivityLog in one transaction",
+        "rateLimit() — Postgres fixed-window counter, raw SQL upsert on RateLimit.key"
+      ],
+      "entity": [
+        "User (Postgres) — Role ADMIN|EDITOR|PORTAL_USER; ~25 inbound relations, nearly all onDelete Restrict",
+        "ActivityLog (Postgres) — written by login and every admin mutation; userId onDelete SetNull and unindexed",
+        "RateLimit (Postgres) — PK on key confirmed in init migration SQL"
+      ],
+      "implemented_by": [
+        "src/server/auth-guard.ts:22"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [
+        "QA-REQ-005",
+        "QA-RUN-001"
+      ],
+      "openFindings": [
+        "QA-REQ-005",
+        "QA-RUN-001"
+      ],
+      "gaps": [
+        "UNTESTED"
+      ]
+    },
+    {
+      "requirement": "REQ-SEC-027",
+      "statement": "Every admin page calls requireAdminPage() and every action or route calls requireAdmin(); the proxy is only a fast redirect",
+      "module": "Authentication & authorization",
+      "source": [
+        "README.md:113",
+        "APPLICATION_CONTEXT.md:27"
+      ],
+      "verdict": "PARTIAL",
+      "ui": [
+        "LoginForm — email, password, hidden callbackUrl; noValidate"
+      ],
+      "api": [
+        "GET/POST /api/auth/[...nextauth] — NextAuth v5 handler, JWT session, 8h maxAge"
+      ],
+      "service": [
+        "WF1 — Admin login to dashboard",
+        "Credentials.authorize — rate limit, bcrypt compare against DUMMY_HASH when user absent, lastLoginAt + ActivityLog in one transaction",
+        "requireAdminPage(role?) — redirect: no user to /admin/login, PORTAL_USER to /club, non-ADMIN to /admin",
+        "login() server action — Zod parse, safeCallback open-redirect guard, signIn",
+        "rateLimit() — Postgres fixed-window counter, raw SQL upsert on RateLimit.key",
+        "getAdminUser() — re-reads the User row from Postgres on every request (REQ-SEC-026)",
+        "loginSchema"
+      ],
+      "entity": [
+        "User (Postgres) — Role ADMIN|EDITOR|PORTAL_USER; ~25 inbound relations, nearly all onDelete Restrict",
+        "ActivityLog (Postgres) — written by login and every admin mutation; userId onDelete SetNull and unindexed",
+        "RateLimit (Postgres) — PK on key confirmed in init migration SQL"
+      ],
+      "implemented_by": [
+        "src/app/admin/(dashboard)/layout.tsx:14",
+        "src/proxy.ts:15",
+        "but src/app/api/club/documents/[id]/file/route.ts:8, src/app/api/task-evidence/[id]/file/route.ts:8 authorize with getAdminUser() plus a scope check"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [],
+      "openFindings": [],
+      "gaps": [
+        "UNTESTED",
+        "PARTIAL"
+      ]
+    },
+    {
+      "requirement": "REQ-SEC-028",
+      "statement": "Every upload entry point checks origin, size, declared MIME type, magic bytes and a rate limit",
+      "module": "Authentication & authorization",
+      "source": [
+        "README.md:50",
+        "APPLICATION_CONTEXT.md:93"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [],
+      "service": [],
+      "entity": [],
+      "implemented_by": [
+        "src/app/api/admin/upload/route.ts:21, :50",
+        "src/app/api/admin/clubs/[id]/documents/route.ts:34",
+        "src/app/api/project-tasks/[id]/evidence/route.ts:37"
+      ],
+      "tests": [
+        "scripts/verify-club-ui.ts:118"
+      ],
+      "executed": true,
+      "findings": [],
+      "openFindings": [],
+      "gaps": [
+        "NOT-IN-GRAPH"
+      ]
+    },
+    {
+      "requirement": "REQ-SEC-029",
+      "statement": "Admin DTOs never include storage keys or password hashes",
+      "module": "Authentication & authorization",
+      "source": [
+        "README.md:115"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [],
+      "service": [],
+      "entity": [],
+      "implemented_by": [
+        "src/server/queries/admin-media.ts:23",
+        "src/server/queries/admin.ts:371"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [],
+      "openFindings": [],
+      "gaps": [
+        "UNTESTED",
+        "NOT-IN-GRAPH"
+      ]
+    },
+    {
+      "requirement": "REQ-SEC-030",
+      "statement": "Sign-in, contact form and uploads are rate limited",
+      "module": "Authentication & authorization",
+      "source": [
+        "README.md:114"
+      ],
+      "verdict": "PARTIAL",
+      "ui": [
+        "LoginForm — email, password, hidden callbackUrl; noValidate"
+      ],
+      "api": [
+        "GET/POST /api/auth/[...nextauth] — NextAuth v5 handler, JWT session, 8h maxAge"
+      ],
+      "service": [
+        "WF1 — Admin login to dashboard",
+        "Credentials.authorize — rate limit, bcrypt compare against DUMMY_HASH when user absent, lastLoginAt + ActivityLog in one transaction",
+        "requireAdminPage(role?) — redirect: no user to /admin/login, PORTAL_USER to /club, non-ADMIN to /admin",
+        "rateLimit() — Postgres fixed-window counter, raw SQL upsert on RateLimit.key",
+        "login() server action — Zod parse, safeCallback open-redirect guard, signIn",
+        "getAdminUser() — re-reads the User row from Postgres on every request (REQ-SEC-026)",
+        "loginSchema"
+      ],
+      "entity": [
+        "User (Postgres) — Role ADMIN|EDITOR|PORTAL_USER; ~25 inbound relations, nearly all onDelete Restrict",
+        "ActivityLog (Postgres) — written by login and every admin mutation; userId onDelete SetNull and unindexed",
+        "RateLimit (Postgres) — PK on key confirmed in init migration SQL"
+      ],
+      "implemented_by": [
+        "src/auth.ts:29",
+        "src/server/actions/contact.ts:59",
+        "src/app/api/admin/upload/route.ts:30"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [
+        "QA-AUTH-001 (fixed)",
+        "QA-AUTH-002",
+        "QA-AUTH-004",
+        "QA-FLOW-005 (fixed)",
+        "QA-FLOW-008",
+        "QA-ROOT-008",
+        "QA-ROOT-009",
+        "QA-REG-001"
+      ],
+      "openFindings": [
+        "QA-AUTH-002",
+        "QA-AUTH-004",
+        "QA-FLOW-008",
+        "QA-ROOT-008",
+        "QA-ROOT-009",
+        "QA-REG-001"
+      ],
+      "gaps": [
+        "UNTESTED",
+        "PARTIAL"
+      ]
+    },
+    {
+      "requirement": "REQ-SEC-031",
+      "statement": "./private-uploads is never served directly; the public file route rejects traversal",
+      "module": "Authentication & authorization",
+      "source": [
+        "README.md:264"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [],
+      "service": [],
+      "entity": [],
+      "implemented_by": [
+        "src/app/uploads/[...path]/route.ts:13"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [],
+      "openFindings": [],
+      "gaps": [
+        "UNTESTED",
+        "NOT-IN-GRAPH"
+      ]
+    },
+    {
+      "requirement": "REQ-CLUB-032",
+      "statement": "/club/[id] is limited to that club's approved coordinator: active membership, COORDINATOR role, matching coordinatorId, active club",
+      "module": "Club portal",
+      "source": [
+        "README.md:61",
+        "APPLICATION_CONTEXT.md:56"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [
+        "MembershipRequest — adult + consent checkboxes, both required client-side",
+        "/admin/clubs/[id] — ClubAdminEditor; loads every User row and every membership with full history, unbounded"
+      ],
+      "api": [
+        "GET/POST /api/auth/[...nextauth] — NextAuth v5 handler, JWT session, 8h maxAge"
+      ],
+      "service": [
+        "WF2 — Club membership request to active membership (reviewer is a trust ADMIN, not the coordinator)",
+        "requestClubMembership — self-scope guard, club must be ACTIVE, Serializable transaction, writes membership + history + audit; writes NO outbox row",
+        "reviewClubMembership — REASON_REQUIRED on reject, status/version conflict check, club ACTIVE check, SELF_APPROVAL ban, current-consent re-check",
+        "setCoordinator -> appointClubCoordinator — requires an ACTIVE membership first; demotes the previous coordinator",
+        "requireClubCoordinator — membership ACTIVE and role COORDINATOR and club ACTIVE and club.coordinatorId === userId (REQ-CLUB-032)",
+        "requestMyClubMembership — getAdminUser, consent re-check, rate limit club-request 10/h",
+        "decideMembership — APPROVE|REJECT with optimistic version and free-text reason",
+        "admin/clubs.ts run() wrapper — requireAdmin('ADMIN') for all 8 exported club actions",
+        "getAdminUser() — re-reads the User row from Postgres on every request (REQ-SEC-026)",
+        "rateLimit() — Postgres fixed-window counter, raw SQL upsert on RateLimit.key",
+        "requireAdminPage(role?) — redirect: no user to /admin/login, PORTAL_USER to /club, non-ADMIN to /admin",
+        "requireAdmin(role?) — throws UnauthorizedError; PORTAL_USER always denied",
+        "Credentials.authorize — rate limit, bcrypt compare against DUMMY_HASH when user absent, lastLoginAt + ActivityLog in one transaction"
+      ],
+      "entity": [
+        "NotificationOutbox (Postgres) — rows written inside the business transaction; no consumer moves PENDING to SENT",
+        "Club (Postgres) — DRAFT|ACTIVE|SUSPENDED|ARCHIVED, optimistic version, no delete path anywhere",
+        "ClubMembership (Postgres) — unique (clubId,userId); INVITED|REQUESTED|ACTIVE|REJECTED|SUSPENDED|ENDED; carries consentAt/adultAttestedAt/consentVersion",
+        "ClubDocument (Postgres row) + private file bytes; mediaId onDelete Restrict; the only evidence table with a working archive writer",
+        "ClubMembershipHistory (Postgres) — immutable by SQL trigger",
+        "AuditEvent (Postgres) — immutable by SQL trigger; written by every operational service; only reader found is the admin club detail page",
+        "User (Postgres) — Role ADMIN|EDITOR|PORTAL_USER; ~25 inbound relations, nearly all onDelete Restrict",
+        "Media (Postgres row + filesystem/Blob bytes) — storageKey unique; 16 inbound SetNull relations, 4 Restrict, 1 Cascade; uploadedById unindexed",
+        "RateLimit (Postgres) — PK on key confirmed in init migration SQL",
+        "ActivityLog (Postgres) — written by login and every admin mutation; userId onDelete SetNull and unindexed"
+      ],
+      "implemented_by": [
+        "src/server/clubs/service.ts:203",
+        "src/app/club/[id]/page.tsx:16, :18"
+      ],
+      "tests": [
+        "scripts/verify-club-ui.ts:152"
+      ],
+      "executed": true,
+      "findings": [
+        "QA-REQ-006",
+        "QA-API-001 (fixed)",
+        "QA-DB-004",
+        "QA-FLOW-003",
+        "QA-FLOW-004",
+        "QA-FLOW-007",
+        "QA-FLOW-008",
+        "QA-ROOT-005",
+        "QA-ROOT-007",
+        "QA-ROOT-009"
+      ],
+      "openFindings": [
+        "QA-REQ-006",
+        "QA-DB-004",
+        "QA-FLOW-003",
+        "QA-FLOW-004",
+        "QA-FLOW-007",
+        "QA-FLOW-008",
+        "QA-ROOT-005",
+        "QA-ROOT-007",
+        "QA-ROOT-009"
+      ],
+      "gaps": []
+    },
+    {
+      "requirement": "REQ-CLUB-033",
+      "statement": "Club membership never grants project access; project access needs an explicit active assignment carrying the required permission flag",
+      "module": "Club portal",
+      "source": [
+        "README.md:61",
+        "docs/security/permissions-matrix.md:5"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [
+        "/volunteer/tasks/[id] — requireVolunteerTask then render; TaskProgress gates both the progress form and the evidence section on editable = TODO|IN_PROGRESS and no open dependency",
+        "/admin/project-operations/[id] TaskRow — assign, dependency, completion review (status SUBMITTED), administrative status, collapsed history+evidence, admin evidence upload gated only on not-closed"
+      ],
+      "api": [
+        "POST /api/project-tasks/[id]/evidence — host+protocol same-origin, getAdminUser, ADMIN bypass else requireVolunteerTask, rate limit 60/h, size/MIME/magic-byte, compensating deleteStoredFile",
+        "GET/POST /api/auth/[...nextauth] — NextAuth v5 handler, JWT session, 8h maxAge"
+      ],
+      "service": [
+        "WF4 — Task assignment, volunteer evidence upload, completion review",
+        "setTaskVolunteer — task open, project PLANNED|ACTIVE, assignment+club ACTIVE, current consented volunteer profile, ACTIVE membership; writes TaskAssignment + history + audit + outbox",
+        "updateMyTask — version check, scope check, live membership, status TODO|IN_PROGRESS only, all predecessors APPROVED, submit requires 100%",
+        "requireVolunteerTask — project ACTIVE, assignment ACTIVE, club ACTIVE, active assignment at the current consent version, plus a live membership re-check (REQ-PRJ-040)",
+        "requireTaskReader — ADMIN bypass, else assigned volunteer, else viewing coordinator",
+        "requireProjectClubCoordinator — assignment ACTIVE, club ACTIVE, coordinator match, project ACTIVE|PLANNED, permission flag, live membership (REQ-CLUB-033)",
+        "createTaskEvidenceFromUpload — storage-key namespace enforced, task status must be TODO|IN_PROGRESS for EVERY actor including ADMIN, writes Media + ProjectTaskEvidence + task history + audit",
+        "reviewTaskCompletion — reason >=3 on RETURN, status must be SUBMITTED, SELF_APPROVAL ban on any assignee, APPROVE requires predecessors APPROVED and subtasks resolved (REQ-VOL-038)",
+        "Task APPROVED with completedAt; unblocks dependants and permits milestone/project completion",
+        "admin/project-operations.ts run() wrapper — requireAdmin('ADMIN') for all 11 actions; revalidates /admin, /volunteer/tasks and /club",
+        "updateAssignedTask — getAdminUser, rate limit project-task-progress 60/h, taskProgressSchema",
+        "decideTask — APPROVE|RETURN, optimistic version, reason max 1000",
+        "requireAdmin(role?) — throws UnauthorizedError; PORTAL_USER always denied",
+        "getAdminUser() — re-reads the User row from Postgres on every request (REQ-SEC-026)",
+        "rateLimit() — Postgres fixed-window counter, raw SQL upsert on RateLimit.key",
+        "requireAdminPage(role?) — redirect: no user to /admin/login, PORTAL_USER to /club, non-ADMIN to /admin",
+        "Credentials.authorize — rate limit, bcrypt compare against DUMMY_HASH when user absent, lastLoginAt + ActivityLog in one transaction"
+      ],
+      "entity": [
+        "TaskAssignment (Postgres) — unique (taskId,profileId), active flag, assignedAt/endedAt",
+        "ProjectTaskHistory (Postgres) — immutable by SQL trigger; records every progress, assignment, evidence and review event",
+        "ProjectTask (Postgres) — TODO|IN_PROGRESS|SUBMITTED|BLOCKED|APPROVED|CANCELLED, optimistic version, milestoneId unindexed",
+        "VolunteerProfile (Postgres) — one per user, carries consentVersion and shareSkillsWithClubs",
+        "ClubMembership (Postgres) — unique (clubId,userId); INVITED|REQUESTED|ACTIVE|REJECTED|SUSPENDED|ENDED; carries consentAt/adultAttestedAt/consentVersion",
+        "NotificationOutbox (Postgres) — rows written inside the business transaction; no consumer moves PENDING to SENT",
+        "Media (Postgres row + filesystem/Blob bytes) — storageKey unique; 16 inbound SetNull relations, 4 Restrict, 1 Cascade; uploadedById unindexed",
+        "ProjectTaskEvidence (Postgres row) + private bytes; mediaId onDelete Restrict; archivedAt has a read filter but no writer (QA-DB-004)",
+        "AuditEvent (Postgres) — immutable by SQL trigger; written by every operational service; only reader found is the admin club detail page",
+        "User (Postgres) — Role ADMIN|EDITOR|PORTAL_USER; ~25 inbound relations, nearly all onDelete Restrict",
+        "Club (Postgres) — DRAFT|ACTIVE|SUSPENDED|ARCHIVED, optimistic version, no delete path anywhere",
+        "RateLimit (Postgres) — PK on key confirmed in init migration SQL",
+        "ActivityLog (Postgres) — written by login and every admin mutation; userId onDelete SetNull and unindexed"
+      ],
+      "implemented_by": [
+        "src/server/projects/service.ts:81",
+        "src/app/club/projects/page.tsx:11",
+        "src/app/club/[id]/page.tsx:17"
+      ],
+      "tests": [
+        "scripts/verify-project-ui.ts (not executed)"
+      ],
+      "executed": false,
+      "findings": [
+        "QA-UI-001",
+        "QA-FLOW-001 (fixed)",
+        "QA-FLOW-003",
+        "QA-FLOW-007",
+        "QA-FLOW-008",
+        "QA-FLOW-009",
+        "QA-ROOT-008"
+      ],
+      "openFindings": [
+        "QA-UI-001",
+        "QA-FLOW-003",
+        "QA-FLOW-007",
+        "QA-FLOW-008",
+        "QA-FLOW-009",
+        "QA-ROOT-008"
+      ],
+      "gaps": [
+        "TEST-NOT-EXECUTED"
+      ]
+    },
+    {
+      "requirement": "REQ-CLUB-034",
+      "statement": "A membership request needs adult self-attestation and current versioned data-use consent; a trust admin decides and cannot approve their own request",
+      "module": "Club portal",
+      "source": [
+        "README.md:61",
+        "APPLICATION_CONTEXT.md:56"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [],
+      "service": [],
+      "entity": [],
+      "implemented_by": [
+        "src/server/clubs/service.ts:129, :152",
+        "prisma/migrations/20261025010000_phase2_clubs/migration.sql:138"
+      ],
+      "tests": [
+        "scripts/verify-club-migration.ts:43"
+      ],
+      "executed": true,
+      "findings": [],
+      "openFindings": [],
+      "gaps": [
+        "NOT-IN-GRAPH"
+      ]
+    },
+    {
+      "requirement": "REQ-CLUB-035",
+      "statement": "A coordinator sees skills and interests only for an active, opted-in member of their own club",
+      "module": "Club portal",
+      "source": [
+        "APPLICATION_CONTEXT.md:58",
+        "docs/security/permissions-matrix.md:7"
+      ],
+      "verdict": "VIOLATED",
+      "ui": [],
+      "api": [],
+      "service": [],
+      "entity": [],
+      "implemented_by": [
+        "src/app/club/[id]/page.tsx:21 scopes the skills block, but :20 also lists every active member's name and email"
+      ],
+      "tests": [
+        "scripts/verify-club-ui.ts:138"
+      ],
+      "executed": true,
+      "findings": [],
+      "openFindings": [],
+      "gaps": [
+        "VIOLATED",
+        "NOT-IN-GRAPH"
+      ]
+    },
+    {
+      "requirement": "REQ-CLUB-036",
+      "statement": "Private club documents are served only after a fresh club-scope check; archived documents are unavailable",
+      "module": "Club portal",
+      "source": [
+        "APPLICATION_CONTEXT.md:87"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [],
+      "service": [],
+      "entity": [],
+      "implemented_by": [
+        "src/app/api/club/documents/[id]/file/route.ts:13, :15 (trust ADMIN is an explicit second path)"
+      ],
+      "tests": [
+        "scripts/verify-club-ui.ts:141"
+      ],
+      "executed": true,
+      "findings": [],
+      "openFindings": [],
+      "gaps": [
+        "NOT-IN-GRAPH"
+      ]
+    },
+    {
+      "requirement": "REQ-VOL-037",
+      "statement": "Attendance requires an active approved membership of the named active club; service hours require that person's approved attendance",
+      "module": "Volunteer portal",
+      "source": [
+        "README.md:62",
+        "APPLICATION_CONTEXT.md:58"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [],
+      "service": [],
+      "entity": [],
+      "implemented_by": [
+        "src/server/volunteers/service.ts:63, :75, :107"
+      ],
+      "tests": [
+        "scripts/verify-volunteer-ui.ts (not executed)"
+      ],
+      "executed": false,
+      "findings": [],
+      "openFindings": [],
+      "gaps": [
+        "TEST-NOT-EXECUTED",
+        "NOT-IN-GRAPH"
+      ]
+    },
+    {
+      "requirement": "REQ-VOL-038",
+      "statement": "Trust-admin review can never be self-review, for volunteer records or task completion",
+      "module": "Volunteer portal",
+      "source": [
+        "APPLICATION_CONTEXT.md:58",
+        "docs/security/permissions-matrix.md:7"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [],
+      "service": [],
+      "entity": [],
+      "implemented_by": [
+        "src/server/volunteers/service.ts:92, :106",
+        "src/server/projects/service.ts:237"
+      ],
+      "tests": [
+        "scripts/verify-volunteer-ui.ts (not executed)"
+      ],
+      "executed": false,
+      "findings": [],
+      "openFindings": [],
+      "gaps": [
+        "TEST-NOT-EXECUTED",
+        "NOT-IN-GRAPH"
+      ]
+    },
+    {
+      "requirement": "REQ-VOL-039",
+      "statement": "Only APPROVED minutes linked to APPROVED attendance count toward a volunteer total; voiding attendance voids its hours",
+      "module": "Volunteer portal",
+      "source": [
+        "README.md:62",
+        "APPLICATION_CONTEXT.md:58"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [
+        "/volunteer VolunteerWorkspace — profile+consent, availability, attendance, service-hours forms; hours form only rendered for APPROVED attendance without an existing log"
+      ],
+      "api": [
+        "GET/POST /api/auth/[...nextauth] — NextAuth v5 handler, JWT session, 8h maxAge"
+      ],
+      "service": [
+        "Confirmed total — aggregate sum of minutes where log APPROVED and attendance APPROVED",
+        "getAdminUser() — re-reads the User row from Postgres on every request (REQ-SEC-026)",
+        "reviewVolunteerRecord — reason >=3 chars for non-approve, version/status conflict, SELF_APPROVAL ban, VOID cascades to the attached service log, hours need APPROVED attendance (REQ-VOL-038, REQ-VOL-039)",
+        "Credentials.authorize — rate limit, bcrypt compare against DUMMY_HASH when user absent, lastLoginAt + ActivityLog in one transaction",
+        "rateLimit() — Postgres fixed-window counter, raw SQL upsert on RateLimit.key"
+      ],
+      "entity": [
+        "VolunteerProfile (Postgres) — one per user, carries consentVersion and shareSkillsWithClubs",
+        "VolunteerAttendance (Postgres) — serviceDate is @db.Date; SUBMITTED|APPROVED|REJECTED|VOIDED; history immutable by trigger",
+        "VolunteerServiceLog (Postgres) — one per attendance; minutes integer; voided transitively when its attendance is voided",
+        "User (Postgres) — Role ADMIN|EDITOR|PORTAL_USER; ~25 inbound relations, nearly all onDelete Restrict",
+        "Club (Postgres) — DRAFT|ACTIVE|SUSPENDED|ARCHIVED, optimistic version, no delete path anywhere",
+        "AuditEvent (Postgres) — immutable by SQL trigger; written by every operational service; only reader found is the admin club detail page",
+        "NotificationOutbox (Postgres) — rows written inside the business transaction; no consumer moves PENDING to SENT",
+        "ActivityLog (Postgres) — written by login and every admin mutation; userId onDelete SetNull and unindexed",
+        "RateLimit (Postgres) — PK on key confirmed in init migration SQL"
+      ],
+      "implemented_by": [
+        "src/app/volunteer/page.tsx:19",
+        "src/server/volunteers/service.ts:96"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [],
+      "openFindings": [],
+      "gaps": [
+        "UNTESTED"
+      ]
+    },
+    {
+      "requirement": "REQ-PRJ-040",
+      "statement": "A volunteer needs a current consented profile, active club membership and an explicit active task assignment to read or update a task",
+      "module": "Project operations",
+      "source": [
+        "APPLICATION_CONTEXT.md:60",
+        "docs/security/permissions-matrix.md:9"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [
+        "/volunteer/tasks/[id] — requireVolunteerTask then render; TaskProgress gates both the progress form and the evidence section on editable = TODO|IN_PROGRESS and no open dependency",
+        "/admin/project-operations/[id] TaskRow — assign, dependency, completion review (status SUBMITTED), administrative status, collapsed history+evidence, admin evidence upload gated only on not-closed"
+      ],
+      "api": [
+        "POST /api/project-tasks/[id]/evidence — host+protocol same-origin, getAdminUser, ADMIN bypass else requireVolunteerTask, rate limit 60/h, size/MIME/magic-byte, compensating deleteStoredFile",
+        "GET/POST /api/auth/[...nextauth] — NextAuth v5 handler, JWT session, 8h maxAge"
+      ],
+      "service": [
+        "WF4 — Task assignment, volunteer evidence upload, completion review",
+        "setTaskVolunteer — task open, project PLANNED|ACTIVE, assignment+club ACTIVE, current consented volunteer profile, ACTIVE membership; writes TaskAssignment + history + audit + outbox",
+        "updateMyTask — version check, scope check, live membership, status TODO|IN_PROGRESS only, all predecessors APPROVED, submit requires 100%",
+        "requireVolunteerTask — project ACTIVE, assignment ACTIVE, club ACTIVE, active assignment at the current consent version, plus a live membership re-check (REQ-PRJ-040)",
+        "requireTaskReader — ADMIN bypass, else assigned volunteer, else viewing coordinator",
+        "requireProjectClubCoordinator — assignment ACTIVE, club ACTIVE, coordinator match, project ACTIVE|PLANNED, permission flag, live membership (REQ-CLUB-033)",
+        "createTaskEvidenceFromUpload — storage-key namespace enforced, task status must be TODO|IN_PROGRESS for EVERY actor including ADMIN, writes Media + ProjectTaskEvidence + task history + audit",
+        "reviewTaskCompletion — reason >=3 on RETURN, status must be SUBMITTED, SELF_APPROVAL ban on any assignee, APPROVE requires predecessors APPROVED and subtasks resolved (REQ-VOL-038)",
+        "Task APPROVED with completedAt; unblocks dependants and permits milestone/project completion",
+        "admin/project-operations.ts run() wrapper — requireAdmin('ADMIN') for all 11 actions; revalidates /admin, /volunteer/tasks and /club",
+        "updateAssignedTask — getAdminUser, rate limit project-task-progress 60/h, taskProgressSchema",
+        "decideTask — APPROVE|RETURN, optimistic version, reason max 1000",
+        "requireAdmin(role?) — throws UnauthorizedError; PORTAL_USER always denied",
+        "getAdminUser() — re-reads the User row from Postgres on every request (REQ-SEC-026)",
+        "rateLimit() — Postgres fixed-window counter, raw SQL upsert on RateLimit.key",
+        "requireAdminPage(role?) — redirect: no user to /admin/login, PORTAL_USER to /club, non-ADMIN to /admin",
+        "Credentials.authorize — rate limit, bcrypt compare against DUMMY_HASH when user absent, lastLoginAt + ActivityLog in one transaction"
+      ],
+      "entity": [
+        "TaskAssignment (Postgres) — unique (taskId,profileId), active flag, assignedAt/endedAt",
+        "ProjectTaskHistory (Postgres) — immutable by SQL trigger; records every progress, assignment, evidence and review event",
+        "ProjectTask (Postgres) — TODO|IN_PROGRESS|SUBMITTED|BLOCKED|APPROVED|CANCELLED, optimistic version, milestoneId unindexed",
+        "VolunteerProfile (Postgres) — one per user, carries consentVersion and shareSkillsWithClubs",
+        "ClubMembership (Postgres) — unique (clubId,userId); INVITED|REQUESTED|ACTIVE|REJECTED|SUSPENDED|ENDED; carries consentAt/adultAttestedAt/consentVersion",
+        "NotificationOutbox (Postgres) — rows written inside the business transaction; no consumer moves PENDING to SENT",
+        "Media (Postgres row + filesystem/Blob bytes) — storageKey unique; 16 inbound SetNull relations, 4 Restrict, 1 Cascade; uploadedById unindexed",
+        "ProjectTaskEvidence (Postgres row) + private bytes; mediaId onDelete Restrict; archivedAt has a read filter but no writer (QA-DB-004)",
+        "AuditEvent (Postgres) — immutable by SQL trigger; written by every operational service; only reader found is the admin club detail page",
+        "User (Postgres) — Role ADMIN|EDITOR|PORTAL_USER; ~25 inbound relations, nearly all onDelete Restrict",
+        "Club (Postgres) — DRAFT|ACTIVE|SUSPENDED|ARCHIVED, optimistic version, no delete path anywhere",
+        "RateLimit (Postgres) — PK on key confirmed in init migration SQL",
+        "ActivityLog (Postgres) — written by login and every admin mutation; userId onDelete SetNull and unindexed"
+      ],
+      "implemented_by": [
+        "src/server/projects/service.ts:197",
+        "src/app/volunteer/tasks/page.tsx:15"
+      ],
+      "tests": [
+        "scripts/verify-project-ui.ts (not executed)"
+      ],
+      "executed": false,
+      "findings": [
+        "QA-UI-001",
+        "QA-FLOW-001 (fixed)",
+        "QA-FLOW-003",
+        "QA-FLOW-007",
+        "QA-FLOW-008",
+        "QA-FLOW-009",
+        "QA-ROOT-008"
+      ],
+      "openFindings": [
+        "QA-UI-001",
+        "QA-FLOW-003",
+        "QA-FLOW-007",
+        "QA-FLOW-008",
+        "QA-FLOW-009",
+        "QA-ROOT-008"
+      ],
+      "gaps": [
+        "TEST-NOT-EXECUTED"
+      ]
+    },
+    {
+      "requirement": "REQ-FND-041",
+      "statement": "Donation request targets are positive integer INR paise; requests and campaigns stay DRAFT with null approval and release FKs",
+      "module": "Fundraising",
+      "source": [
+        "README.md:64",
+        "APPLICATION_CONTEXT.md:62"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [],
+      "service": [],
+      "entity": [],
+      "implemented_by": [
+        "prisma/migrations/20261026064436_phase5_fundraising_drafts/migration.sql:173"
+      ],
+      "tests": [
+        "scripts/verify-fundraising-migration.ts (not executed)"
+      ],
+      "executed": false,
+      "findings": [],
+      "openFindings": [],
+      "gaps": [
+        "TEST-NOT-EXECUTED",
+        "NOT-IN-GRAPH"
+      ]
+    },
+    {
+      "requirement": "REQ-DON-042",
+      "statement": "Every donation row is constrained by SQL to positive paise, INR and PENDING_VERIFICATION",
+      "module": "Donations",
+      "source": [
+        "APPLICATION_CONTEXT.md:64"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [
+        "/donor — own donor profile only, 100 most recent donations, status cell is the literal string 'Pending verification' rather than the row's status"
+      ],
+      "api": [
+        "GET/POST /api/auth/[...nextauth] — NextAuth v5 handler, JWT session, 8h maxAge"
+      ],
+      "service": [
+        "Terminal state — PENDING_VERIFICATION forever; no verification, receipt, allocation or confirmed total exists (REQ-APPR-046 inert by design)",
+        "createPendingManualDonation — idempotency key plus SHA-256 request fingerprint, donor must be PORTAL_USER, project must be PUBLISHED and non-demo, campaign must match the project; status hardcoded PENDING_VERIFICATION",
+        "getAdminUser() — re-reads the User row from Postgres on every request (REQ-SEC-026)",
+        "createDonorProfile — the target account must already exist AND be PORTAL_USER (REQ-DON-043); anonymousByDefault never written",
+        "Credentials.authorize — rate limit, bcrypt compare against DUMMY_HASH when user absent, lastLoginAt + ActivityLog in one transaction",
+        "rateLimit() — Postgres fixed-window counter, raw SQL upsert on RateLimit.key"
+      ],
+      "entity": [
+        "Donation (Postgres) — amountPaise BigInt, currency INR, status PENDING_VERIFICATION, unique idempotencyKey; SQL CHECK constraints enforce all three",
+        "DonationHistory (Postgres) — immutable by SQL trigger; snapshot written at intake",
+        "DonorProfile (Postgres) — one per user, anonymousByDefault default true and never read",
+        "AuditEvent (Postgres) — immutable by SQL trigger; written by every operational service; only reader found is the admin club detail page",
+        "User (Postgres) — Role ADMIN|EDITOR|PORTAL_USER; ~25 inbound relations, nearly all onDelete Restrict",
+        "ActivityLog (Postgres) — written by login and every admin mutation; userId onDelete SetNull and unindexed",
+        "RateLimit (Postgres) — PK on key confirmed in init migration SQL"
+      ],
+      "implemented_by": [
+        "prisma/migrations/20261026073000_phase6_donation_intake/migration.sql:81",
+        "prisma/schema.prisma:66"
+      ],
+      "tests": [
+        "scripts/verify-donations-migration.ts (not executed)"
+      ],
+      "executed": false,
+      "findings": [
+        "QA-FLOW-010"
+      ],
+      "openFindings": [
+        "QA-FLOW-010"
+      ],
+      "gaps": [
+        "TEST-NOT-EXECUTED"
+      ]
+    },
+    {
+      "requirement": "REQ-DON-043",
+      "statement": "A donor profile may link an existing PORTAL_USER account only; intake requires a published, non-demo project",
+      "module": "Donations",
+      "source": [
+        "APPLICATION_CONTEXT.md:64"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [],
+      "service": [],
+      "entity": [],
+      "implemented_by": [
+        "src/server/donations/service.ts:20, :46"
+      ],
+      "tests": [
+        "scripts/verify-donations-ui.ts (not executed)"
+      ],
+      "executed": false,
+      "findings": [],
+      "openFindings": [],
+      "gaps": [
+        "TEST-NOT-EXECUTED",
+        "NOT-IN-GRAPH"
+      ]
+    },
+    {
+      "requirement": "REQ-DON-044",
+      "statement": "Donor profiles default to anonymous public display",
+      "module": "Donations",
+      "source": [
+        "APPLICATION_CONTEXT.md:64"
+      ],
+      "verdict": "UNIMPLEMENTED",
+      "ui": [],
+      "api": [],
+      "service": [],
+      "entity": [],
+      "implemented_by": [],
+      "tests": [],
+      "executed": false,
+      "findings": [],
+      "openFindings": [],
+      "gaps": [
+        "UNIMPLEMENTED",
+        "UNTESTED"
+      ]
+    },
+    {
+      "requirement": "REQ-DON-045",
+      "statement": "Donors see only their own pending history; references, internal notes, evidence and amounts stay out of public queries",
+      "module": "Donations",
+      "source": [
+        "APPLICATION_CONTEXT.md:64"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [
+        "/donor — own donor profile only, 100 most recent donations, status cell is the literal string 'Pending verification' rather than the row's status",
+        "/admin/donations — ADMIN only; donor list, published non-demo project list, 100 most recent donations; mints a fresh idempotencyKey per render",
+        "DonorLinkForm — email, type, organizationName; permanently disabled anonymousByDefault checkbox (QA-REQ-007), no client mirror of the conditional org rule (QA-UI-003)",
+        "ManualDonationIntakeForm — hidden idempotencyKey, hardcoded empty campaignId (QA-UI-004), silently disabled submit when prerequisites are empty (QA-UI-005)"
+      ],
+      "api": [
+        "GET/POST /api/auth/[...nextauth] — NextAuth v5 handler, JWT session, 8h maxAge"
+      ],
+      "service": [
+        "WF6 — Manual donation intake to donor visibility; terminates at PENDING_VERIFICATION, the only state the enum has",
+        "REQ-DON-044 — donor profiles default to anonymous public display (UNIMPLEMENTED, QA-REQ-007); the donor page asserts it in prose",
+        "linkDonorAccount — donorProfileSchema parse then createDonorProfile",
+        "createDonorProfile — the target account must already exist AND be PORTAL_USER (REQ-DON-043); anonymousByDefault never written",
+        "recordManualDonationIntake — manualDonationIntakeSchema parse; revalidates /admin/donations and /donor",
+        "createPendingManualDonation — idempotency key plus SHA-256 request fingerprint, donor must be PORTAL_USER, project must be PUBLISHED and non-demo, campaign must match the project; status hardcoded PENDING_VERIFICATION",
+        "getAdminUser() — re-reads the User row from Postgres on every request (REQ-SEC-026)",
+        "requireAdminPage(role?) — redirect: no user to /admin/login, PORTAL_USER to /club, non-ADMIN to /admin",
+        "admin/donations.ts run() wrapper — requireAdmin('ADMIN'); the only module family whose error payload carries a machine-readable code (QA-API-004)",
+        "requireAdmin(role?) — throws UnauthorizedError; PORTAL_USER always denied",
+        "Credentials.authorize — rate limit, bcrypt compare against DUMMY_HASH when user absent, lastLoginAt + ActivityLog in one transaction",
+        "rateLimit() — Postgres fixed-window counter, raw SQL upsert on RateLimit.key"
+      ],
+      "entity": [
+        "Donation (Postgres) — amountPaise BigInt, currency INR, status PENDING_VERIFICATION, unique idempotencyKey; SQL CHECK constraints enforce all three",
+        "DonorProfile (Postgres) — one per user, anonymousByDefault default true and never read",
+        "User (Postgres) — Role ADMIN|EDITOR|PORTAL_USER; ~25 inbound relations, nearly all onDelete Restrict",
+        "AuditEvent (Postgres) — immutable by SQL trigger; written by every operational service; only reader found is the admin club detail page",
+        "DonationHistory (Postgres) — immutable by SQL trigger; snapshot written at intake",
+        "ActivityLog (Postgres) — written by login and every admin mutation; userId onDelete SetNull and unindexed",
+        "RateLimit (Postgres) — PK on key confirmed in init migration SQL"
+      ],
+      "implemented_by": [
+        "src/app/donor/page.tsx:14"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [
+        "QA-FLOW-010",
+        "QA-ROOT-003",
+        "QA-ROOT-004",
+        "QA-ROOT-006"
+      ],
+      "openFindings": [
+        "QA-FLOW-010",
+        "QA-ROOT-003",
+        "QA-ROOT-004",
+        "QA-ROOT-006"
+      ],
+      "gaps": [
+        "UNTESTED"
+      ]
+    },
+    {
+      "requirement": "REQ-APPR-046",
+      "statement": "Live financial and public-release approval remains disabled; no threshold or approver assignment is active",
+      "module": "Approval engine",
+      "source": [
+        "README.md:59",
+        "APPLICATION_CONTEXT.md:62"
+      ],
+      "verdict": "SATISFIED",
+      "ui": [],
+      "api": [],
+      "service": [],
+      "entity": [],
+      "implemented_by": [
+        "src/server/fundraising/service.ts:67 (see qa/architecture/role-permission-matrix.md:26)"
+      ],
+      "tests": [
+        "src/lib/approval/definition.test.ts"
+      ],
+      "executed": true,
+      "findings": [],
+      "openFindings": [],
+      "gaps": [
+        "NOT-IN-GRAPH"
+      ]
+    },
+    {
+      "requirement": "REQ-NOTIF-047",
+      "statement": "A financial mutation is never retried merely because notification delivery failed",
+      "module": "Notifications",
+      "source": [
+        "docs/architecture/trustfolio-expansion.md:97"
+      ],
+      "verdict": "UNVERIFIABLE",
+      "ui": [],
+      "api": [],
+      "service": [],
+      "entity": [],
+      "implemented_by": [
+        "no delivery path exists",
+        "outbox rows are written and displayed only (qa/architecture/application-architecture.md:90)"
+      ],
+      "tests": [],
+      "executed": false,
+      "findings": [
+        "QA-FLOW-011"
+      ],
+      "openFindings": [
+        "QA-FLOW-011"
+      ],
+      "gaps": [
+        "UNTESTED",
+        "NOT-IN-GRAPH"
+      ]
+    }
+  ],
+  "unspecified": [
+    "GET /api/club/documents/[id]/file — ADMIN bypass else requireClubCoordinator; no storage-key-prefix check (QA-API-001)",
+    "GET /api/task-evidence/[id]/file — archivedAt filter, PRIVATE visibility, storage-key prefix check, requireTaskReader; private no-store headers",
+    "POST /api/admin/donations/[id]/evidence — ADMIN only, donation must be PENDING_VERIFICATION, rate limit 40/h, compensating delete"
+  ],
+  "warnings": []
+}

@@ -1,0 +1,2047 @@
+{
+  "generatedAt": "2026-11-16T12:58:51.772Z",
+  "root": "C:\\Users\\balas\\Desktop\\Project\\trustfolio",
+  "base": "http://localhost:3100",
+  "mode": "EXECUTED",
+  "limitations": [
+    "HTTP only: no JavaScript execution, no console errors, no layout or visual checks.",
+    "Unauthenticated unless a cookie is supplied; protected routes are expected to redirect or 401.",
+    "Dynamic segments are filled with a placeholder, so a 404 may mean 'no such record' rather than a broken route."
+  ],
+  "routes": [
+    {
+      "url": "/[locale]",
+      "source": "src/app/[locale]/page.tsx",
+      "kind": "page",
+      "requested": "/en",
+      "dynamicSegments": [
+        "locale"
+      ],
+      "status": 200,
+      "redirectTo": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 256,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "s-maxage=86400, stale-while-revalidate=31449600"
+      }
+    },
+    {
+      "url": "/[locale]/[...rest]",
+      "source": "src/app/[locale]/[...rest]/page.tsx",
+      "kind": "page",
+      "requested": "/en/smoke/segment",
+      "dynamicSegments": [
+        "locale",
+        "rest"
+      ],
+      "status": 404,
+      "redirectTo": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 462,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate"
+      }
+    },
+    {
+      "url": "/[locale]/about",
+      "source": "src/app/[locale]/about/page.tsx",
+      "kind": "page",
+      "requested": "/en/about",
+      "dynamicSegments": [
+        "locale"
+      ],
+      "status": 200,
+      "redirectTo": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 509,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "s-maxage=86400, stale-while-revalidate=31449600"
+      }
+    },
+    {
+      "url": "/[locale]/activities",
+      "source": "src/app/[locale]/activities/page.tsx",
+      "kind": "page",
+      "requested": "/en/activities",
+      "dynamicSegments": [
+        "locale"
+      ],
+      "status": 200,
+      "redirectTo": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 516,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "s-maxage=86400, stale-while-revalidate=31449600"
+      }
+    },
+    {
+      "url": "/[locale]/activities/[slug]",
+      "source": "src/app/[locale]/activities/[slug]/page.tsx",
+      "kind": "page",
+      "requested": "/en/activities/smoke-test-slug",
+      "dynamicSegments": [
+        "locale",
+        "slug"
+      ],
+      "status": 404,
+      "redirectTo": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 430,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "s-maxage=86400, stale-while-revalidate=31449600"
+      }
+    },
+    {
+      "url": "/[locale]/certificates",
+      "source": "src/app/[locale]/certificates/page.tsx",
+      "kind": "page",
+      "requested": "/en/certificates",
+      "dynamicSegments": [
+        "locale"
+      ],
+      "status": 200,
+      "redirectTo": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 77,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "s-maxage=86400, stale-while-revalidate=31449600"
+      }
+    },
+    {
+      "url": "/[locale]/contact",
+      "source": "src/app/[locale]/contact/page.tsx",
+      "kind": "page",
+      "requested": "/en/contact",
+      "dynamicSegments": [
+        "locale"
+      ],
+      "status": 200,
+      "redirectTo": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 150,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "s-maxage=86400, stale-while-revalidate=31449600"
+      }
+    },
+    {
+      "url": "/[locale]/documents",
+      "source": "src/app/[locale]/documents/page.tsx",
+      "kind": "page",
+      "requested": "/en/documents",
+      "dynamicSegments": [
+        "locale"
+      ],
+      "status": 200,
+      "redirectTo": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 142,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "s-maxage=86400, stale-while-revalidate=31449600"
+      }
+    },
+    {
+      "url": "/[locale]/documents/[slug]",
+      "source": "src/app/[locale]/documents/[slug]/page.tsx",
+      "kind": "page",
+      "requested": "/en/documents/smoke-test-slug",
+      "dynamicSegments": [
+        "locale",
+        "slug"
+      ],
+      "status": 404,
+      "redirectTo": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 109,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "s-maxage=86400, stale-while-revalidate=31449600"
+      }
+    },
+    {
+      "url": "/[locale]/gallery",
+      "source": "src/app/[locale]/gallery/page.tsx",
+      "kind": "page",
+      "requested": "/en/gallery",
+      "dynamicSegments": [
+        "locale"
+      ],
+      "status": 200,
+      "redirectTo": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 122,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "s-maxage=86400, stale-while-revalidate=31449600"
+      }
+    },
+    {
+      "url": "/[locale]/gallery/[slug]",
+      "source": "src/app/[locale]/gallery/[slug]/page.tsx",
+      "kind": "page",
+      "requested": "/en/gallery/smoke-test-slug",
+      "dynamicSegments": [
+        "locale",
+        "slug"
+      ],
+      "status": 404,
+      "redirectTo": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 81,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "s-maxage=86400, stale-while-revalidate=31449600"
+      }
+    },
+    {
+      "url": "/[locale]/impact",
+      "source": "src/app/[locale]/impact/page.tsx",
+      "kind": "page",
+      "requested": "/en/impact",
+      "dynamicSegments": [
+        "locale"
+      ],
+      "status": 200,
+      "redirectTo": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 115,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "s-maxage=86400, stale-while-revalidate=31449600"
+      }
+    },
+    {
+      "url": "/[locale]/news",
+      "source": "src/app/[locale]/news/page.tsx",
+      "kind": "page",
+      "requested": "/en/news",
+      "dynamicSegments": [
+        "locale"
+      ],
+      "status": 200,
+      "redirectTo": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 129,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "s-maxage=86400, stale-while-revalidate=31449600"
+      }
+    },
+    {
+      "url": "/[locale]/news/[slug]",
+      "source": "src/app/[locale]/news/[slug]/page.tsx",
+      "kind": "page",
+      "requested": "/en/news/smoke-test-slug",
+      "dynamicSegments": [
+        "locale",
+        "slug"
+      ],
+      "status": 404,
+      "redirectTo": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 94,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "s-maxage=86400, stale-while-revalidate=31449600"
+      }
+    },
+    {
+      "url": "/[locale]/privacy",
+      "source": "src/app/[locale]/privacy/page.tsx",
+      "kind": "page",
+      "requested": "/en/privacy",
+      "dynamicSegments": [
+        "locale"
+      ],
+      "status": 200,
+      "redirectTo": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 129,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "s-maxage=86400, stale-while-revalidate=31449600"
+      }
+    },
+    {
+      "url": "/[locale]/projects",
+      "source": "src/app/[locale]/projects/page.tsx",
+      "kind": "page",
+      "requested": "/en/projects",
+      "dynamicSegments": [
+        "locale"
+      ],
+      "status": 200,
+      "redirectTo": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 128,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "s-maxage=86400, stale-while-revalidate=31449600"
+      }
+    },
+    {
+      "url": "/[locale]/projects/[slug]",
+      "source": "src/app/[locale]/projects/[slug]/page.tsx",
+      "kind": "page",
+      "requested": "/en/projects/smoke-test-slug",
+      "dynamicSegments": [
+        "locale",
+        "slug"
+      ],
+      "status": 404,
+      "redirectTo": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 90,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "s-maxage=86400, stale-while-revalidate=31449600"
+      }
+    },
+    {
+      "url": "/[locale]/reports",
+      "source": "src/app/[locale]/reports/page.tsx",
+      "kind": "page",
+      "requested": "/en/reports",
+      "dynamicSegments": [
+        "locale"
+      ],
+      "status": 200,
+      "redirectTo": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 160,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "s-maxage=86400, stale-while-revalidate=31449600"
+      }
+    },
+    {
+      "url": "/[locale]/reports/[slug]",
+      "source": "src/app/[locale]/reports/[slug]/page.tsx",
+      "kind": "page",
+      "requested": "/en/reports/smoke-test-slug",
+      "dynamicSegments": [
+        "locale",
+        "slug"
+      ],
+      "status": 404,
+      "redirectTo": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 131,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "s-maxage=86400, stale-while-revalidate=31449600"
+      }
+    },
+    {
+      "url": "/[locale]/search",
+      "source": "src/app/[locale]/search/page.tsx",
+      "kind": "page",
+      "requested": "/en/search",
+      "dynamicSegments": [
+        "locale"
+      ],
+      "status": 200,
+      "redirectTo": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 44,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate"
+      }
+    },
+    {
+      "url": "/[locale]/stories",
+      "source": "src/app/[locale]/stories/page.tsx",
+      "kind": "page",
+      "requested": "/en/stories",
+      "dynamicSegments": [
+        "locale"
+      ],
+      "status": 200,
+      "redirectTo": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 135,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "s-maxage=86400, stale-while-revalidate=31449600"
+      }
+    },
+    {
+      "url": "/[locale]/stories/[slug]",
+      "source": "src/app/[locale]/stories/[slug]/page.tsx",
+      "kind": "page",
+      "requested": "/en/stories/smoke-test-slug",
+      "dynamicSegments": [
+        "locale",
+        "slug"
+      ],
+      "status": 404,
+      "redirectTo": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 73,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "s-maxage=86400, stale-while-revalidate=31449600"
+      }
+    },
+    {
+      "url": "/[locale]/terms",
+      "source": "src/app/[locale]/terms/page.tsx",
+      "kind": "page",
+      "requested": "/en/terms",
+      "dynamicSegments": [
+        "locale"
+      ],
+      "status": 200,
+      "redirectTo": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 77,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "s-maxage=86400, stale-while-revalidate=31449600"
+      }
+    },
+    {
+      "url": "/[locale]/trustees",
+      "source": "src/app/[locale]/trustees/page.tsx",
+      "kind": "page",
+      "requested": "/en/trustees",
+      "dynamicSegments": [
+        "locale"
+      ],
+      "status": 200,
+      "redirectTo": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 79,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "s-maxage=86400, stale-while-revalidate=31449600"
+      }
+    },
+    {
+      "url": "/[locale]/trustees/[slug]",
+      "source": "src/app/[locale]/trustees/[slug]/page.tsx",
+      "kind": "page",
+      "requested": "/en/trustees/smoke-test-slug",
+      "dynamicSegments": [
+        "locale",
+        "slug"
+      ],
+      "status": 404,
+      "redirectTo": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 60,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "s-maxage=86400, stale-while-revalidate=31449600"
+      }
+    },
+    {
+      "url": "/[locale]/verification",
+      "source": "src/app/[locale]/verification/page.tsx",
+      "kind": "page",
+      "requested": "/en/verification",
+      "dynamicSegments": [
+        "locale"
+      ],
+      "status": 200,
+      "redirectTo": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 115,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "s-maxage=86400, stale-while-revalidate=31449600"
+      }
+    },
+    {
+      "url": "/[locale]/verification/registration",
+      "source": "src/app/[locale]/verification/registration/page.tsx",
+      "kind": "page",
+      "requested": "/en/verification/registration",
+      "dynamicSegments": [
+        "locale"
+      ],
+      "status": 200,
+      "redirectTo": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 355,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "s-maxage=86400, stale-while-revalidate=31449600"
+      }
+    },
+    {
+      "url": "/admin",
+      "source": "src/app/admin/(dashboard)/page.tsx",
+      "kind": "page",
+      "requested": "/admin",
+      "dynamicSegments": [],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=%2Fadmin",
+      "contentType": null,
+      "durationMs": 11,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/admin/[resource]",
+      "source": "src/app/admin/(dashboard)/[resource]/page.tsx",
+      "kind": "page",
+      "requested": "/admin/smoke-resource",
+      "dynamicSegments": [
+        "resource"
+      ],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=%2Fadmin%2Fsmoke-resource",
+      "contentType": null,
+      "durationMs": 4,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/admin/[resource]/[id]",
+      "source": "src/app/admin/(dashboard)/[resource]/[id]/page.tsx",
+      "kind": "page",
+      "requested": "/admin/smoke-resource/smoke-test-id",
+      "dynamicSegments": [
+        "resource",
+        "id"
+      ],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=%2Fadmin%2Fsmoke-resource%2Fsmoke-test-id",
+      "contentType": null,
+      "durationMs": 3,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/admin/[resource]/new",
+      "source": "src/app/admin/(dashboard)/[resource]/new/page.tsx",
+      "kind": "page",
+      "requested": "/admin/smoke-resource/new",
+      "dynamicSegments": [
+        "resource"
+      ],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=%2Fadmin%2Fsmoke-resource%2Fnew",
+      "contentType": null,
+      "durationMs": 3,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/admin/account",
+      "source": "src/app/admin/(dashboard)/account/page.tsx",
+      "kind": "page",
+      "requested": "/admin/account",
+      "dynamicSegments": [],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=%2Fadmin%2Faccount",
+      "contentType": null,
+      "durationMs": 4,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/admin/approvals",
+      "source": "src/app/admin/(dashboard)/approvals/page.tsx",
+      "kind": "page",
+      "requested": "/admin/approvals",
+      "dynamicSegments": [],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=%2Fadmin%2Fapprovals",
+      "contentType": null,
+      "durationMs": 3,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/admin/categories",
+      "source": "src/app/admin/(dashboard)/categories/page.tsx",
+      "kind": "page",
+      "requested": "/admin/categories",
+      "dynamicSegments": [],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=%2Fadmin%2Fcategories",
+      "contentType": null,
+      "durationMs": 3,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/admin/clubs",
+      "source": "src/app/admin/(dashboard)/clubs/page.tsx",
+      "kind": "page",
+      "requested": "/admin/clubs",
+      "dynamicSegments": [],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=%2Fadmin%2Fclubs",
+      "contentType": null,
+      "durationMs": 3,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/admin/clubs/[id]",
+      "source": "src/app/admin/(dashboard)/clubs/[id]/page.tsx",
+      "kind": "page",
+      "requested": "/admin/clubs/smoke-test-id",
+      "dynamicSegments": [
+        "id"
+      ],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=%2Fadmin%2Fclubs%2Fsmoke-test-id",
+      "contentType": null,
+      "durationMs": 3,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/admin/donations",
+      "source": "src/app/admin/(dashboard)/donations/page.tsx",
+      "kind": "page",
+      "requested": "/admin/donations",
+      "dynamicSegments": [],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=%2Fadmin%2Fdonations",
+      "contentType": null,
+      "durationMs": 4,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/admin/fundraising",
+      "source": "src/app/admin/(dashboard)/fundraising/page.tsx",
+      "kind": "page",
+      "requested": "/admin/fundraising",
+      "dynamicSegments": [],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=%2Fadmin%2Ffundraising",
+      "contentType": null,
+      "durationMs": 3,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/admin/fundraising/[projectId]",
+      "source": "src/app/admin/(dashboard)/fundraising/[projectId]/page.tsx",
+      "kind": "page",
+      "requested": "/admin/fundraising/smoke-projectId",
+      "dynamicSegments": [
+        "projectId"
+      ],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=%2Fadmin%2Ffundraising%2Fsmoke-projectId",
+      "contentType": null,
+      "durationMs": 3,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/admin/fundraising/requests/[id]",
+      "source": "src/app/admin/(dashboard)/fundraising/requests/[id]/page.tsx",
+      "kind": "page",
+      "requested": "/admin/fundraising/requests/smoke-test-id",
+      "dynamicSegments": [
+        "id"
+      ],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=%2Fadmin%2Ffundraising%2Frequests%2Fsmoke-test-id",
+      "contentType": null,
+      "durationMs": 3,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/admin/login",
+      "source": "src/app/admin/login/page.tsx",
+      "kind": "page",
+      "requested": "/admin/login",
+      "dynamicSegments": [],
+      "status": 200,
+      "redirectTo": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 49,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate"
+      }
+    },
+    {
+      "url": "/admin/media",
+      "source": "src/app/admin/(dashboard)/media/page.tsx",
+      "kind": "page",
+      "requested": "/admin/media",
+      "dynamicSegments": [],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=%2Fadmin%2Fmedia",
+      "contentType": null,
+      "durationMs": 33,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/admin/messages",
+      "source": "src/app/admin/(dashboard)/messages/page.tsx",
+      "kind": "page",
+      "requested": "/admin/messages",
+      "dynamicSegments": [],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=%2Fadmin%2Fmessages",
+      "contentType": null,
+      "durationMs": 7,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/admin/navigation",
+      "source": "src/app/admin/(dashboard)/navigation/page.tsx",
+      "kind": "page",
+      "requested": "/admin/navigation",
+      "dynamicSegments": [],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=%2Fadmin%2Fnavigation",
+      "contentType": null,
+      "durationMs": 7,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/admin/project-operations",
+      "source": "src/app/admin/(dashboard)/project-operations/page.tsx",
+      "kind": "page",
+      "requested": "/admin/project-operations",
+      "dynamicSegments": [],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=%2Fadmin%2Fproject-operations",
+      "contentType": null,
+      "durationMs": 4,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/admin/project-operations/[id]",
+      "source": "src/app/admin/(dashboard)/project-operations/[id]/page.tsx",
+      "kind": "page",
+      "requested": "/admin/project-operations/smoke-test-id",
+      "dynamicSegments": [
+        "id"
+      ],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=%2Fadmin%2Fproject-operations%2Fsmoke-test-id",
+      "contentType": null,
+      "durationMs": 3,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/admin/settings",
+      "source": "src/app/admin/(dashboard)/settings/page.tsx",
+      "kind": "page",
+      "requested": "/admin/settings",
+      "dynamicSegments": [],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=%2Fadmin%2Fsettings",
+      "contentType": null,
+      "durationMs": 3,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/admin/social",
+      "source": "src/app/admin/(dashboard)/social/page.tsx",
+      "kind": "page",
+      "requested": "/admin/social",
+      "dynamicSegments": [],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=%2Fadmin%2Fsocial",
+      "contentType": null,
+      "durationMs": 4,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/admin/translations",
+      "source": "src/app/admin/(dashboard)/translations/page.tsx",
+      "kind": "page",
+      "requested": "/admin/translations",
+      "dynamicSegments": [],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=%2Fadmin%2Ftranslations",
+      "contentType": null,
+      "durationMs": 4,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/admin/trust",
+      "source": "src/app/admin/(dashboard)/trust/page.tsx",
+      "kind": "page",
+      "requested": "/admin/trust",
+      "dynamicSegments": [],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=%2Fadmin%2Ftrust",
+      "contentType": null,
+      "durationMs": 4,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/admin/users",
+      "source": "src/app/admin/(dashboard)/users/page.tsx",
+      "kind": "page",
+      "requested": "/admin/users",
+      "dynamicSegments": [],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=%2Fadmin%2Fusers",
+      "contentType": null,
+      "durationMs": 3,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/admin/volunteers",
+      "source": "src/app/admin/(dashboard)/volunteers/page.tsx",
+      "kind": "page",
+      "requested": "/admin/volunteers",
+      "dynamicSegments": [],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=%2Fadmin%2Fvolunteers",
+      "contentType": null,
+      "durationMs": 3,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/api/admin/clubs/[id]/documents",
+      "source": "src/app/api/admin/clubs/[id]/documents/route.ts",
+      "kind": "api",
+      "requested": "/api/admin/clubs/smoke-test-id/documents",
+      "dynamicSegments": [
+        "id"
+      ],
+      "status": 405,
+      "redirectTo": null,
+      "contentType": null,
+      "durationMs": 99,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/api/admin/donations/[id]/evidence",
+      "source": "src/app/api/admin/donations/[id]/evidence/route.ts",
+      "kind": "api",
+      "requested": "/api/admin/donations/smoke-test-id/evidence",
+      "dynamicSegments": [
+        "id"
+      ],
+      "status": 405,
+      "redirectTo": null,
+      "contentType": null,
+      "durationMs": 105,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/api/admin/donations/evidence/[id]/file",
+      "source": "src/app/api/admin/donations/evidence/[id]/file/route.ts",
+      "kind": "api",
+      "requested": "/api/admin/donations/evidence/smoke-test-id/file",
+      "dynamicSegments": [
+        "id"
+      ],
+      "status": 401,
+      "redirectTo": null,
+      "contentType": "text/plain;charset=UTF-8",
+      "durationMs": 115,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/api/admin/fundraising/evidence/[id]/file",
+      "source": "src/app/api/admin/fundraising/evidence/[id]/file/route.ts",
+      "kind": "api",
+      "requested": "/api/admin/fundraising/evidence/smoke-test-id/file",
+      "dynamicSegments": [
+        "id"
+      ],
+      "status": 401,
+      "redirectTo": null,
+      "contentType": "text/plain;charset=UTF-8",
+      "durationMs": 24,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/api/admin/fundraising/requests/[id]/evidence",
+      "source": "src/app/api/admin/fundraising/requests/[id]/evidence/route.ts",
+      "kind": "api",
+      "requested": "/api/admin/fundraising/requests/smoke-test-id/evidence",
+      "dynamicSegments": [
+        "id"
+      ],
+      "status": 405,
+      "redirectTo": null,
+      "contentType": null,
+      "durationMs": 22,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/api/admin/media",
+      "source": "src/app/api/admin/media/route.ts",
+      "kind": "api",
+      "requested": "/api/admin/media",
+      "dynamicSegments": [],
+      "status": 401,
+      "redirectTo": null,
+      "contentType": "application/json",
+      "durationMs": 17,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/api/admin/media/[id]/file",
+      "source": "src/app/api/admin/media/[id]/file/route.ts",
+      "kind": "api",
+      "requested": "/api/admin/media/smoke-test-id/file",
+      "dynamicSegments": [
+        "id"
+      ],
+      "status": 401,
+      "redirectTo": null,
+      "contentType": "text/plain;charset=UTF-8",
+      "durationMs": 21,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/api/admin/upload",
+      "source": "src/app/api/admin/upload/route.ts",
+      "kind": "api",
+      "requested": "/api/admin/upload",
+      "dynamicSegments": [],
+      "status": 405,
+      "redirectTo": null,
+      "contentType": null,
+      "durationMs": 14,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/api/auth/[...nextauth]",
+      "source": "src/app/api/auth/[...nextauth]/route.ts",
+      "kind": "api",
+      "requested": "/api/auth/smoke/segment",
+      "dynamicSegments": [
+        "nextauth"
+      ],
+      "status": 400,
+      "redirectTo": null,
+      "contentType": "application/json",
+      "durationMs": 16,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/api/club/documents/[id]/file",
+      "source": "src/app/api/club/documents/[id]/file/route.ts",
+      "kind": "api",
+      "requested": "/api/club/documents/smoke-test-id/file",
+      "dynamicSegments": [
+        "id"
+      ],
+      "status": 401,
+      "redirectTo": null,
+      "contentType": "text/plain;charset=UTF-8",
+      "durationMs": 19,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/api/project-tasks/[id]/evidence",
+      "source": "src/app/api/project-tasks/[id]/evidence/route.ts",
+      "kind": "api",
+      "requested": "/api/project-tasks/smoke-test-id/evidence",
+      "dynamicSegments": [
+        "id"
+      ],
+      "status": 405,
+      "redirectTo": null,
+      "contentType": null,
+      "durationMs": 16,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/api/task-evidence/[id]/file",
+      "source": "src/app/api/task-evidence/[id]/file/route.ts",
+      "kind": "api",
+      "requested": "/api/task-evidence/smoke-test-id/file",
+      "dynamicSegments": [
+        "id"
+      ],
+      "status": 401,
+      "redirectTo": null,
+      "contentType": "text/plain;charset=UTF-8",
+      "durationMs": 28,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/club",
+      "source": "src/app/club/page.tsx",
+      "kind": "page",
+      "requested": "/club",
+      "dynamicSegments": [],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=/club",
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 44,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate"
+      }
+    },
+    {
+      "url": "/club/[id]",
+      "source": "src/app/club/[id]/page.tsx",
+      "kind": "page",
+      "requested": "/club/smoke-test-id",
+      "dynamicSegments": [
+        "id"
+      ],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=/club",
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 55,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate"
+      }
+    },
+    {
+      "url": "/club/projects",
+      "source": "src/app/club/projects/page.tsx",
+      "kind": "page",
+      "requested": "/club/projects",
+      "dynamicSegments": [],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=/club/projects",
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 40,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate"
+      }
+    },
+    {
+      "url": "/club/projects/[assignmentId]",
+      "source": "src/app/club/projects/[assignmentId]/page.tsx",
+      "kind": "page",
+      "requested": "/club/projects/smoke-assignmentId",
+      "dynamicSegments": [
+        "assignmentId"
+      ],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=/club",
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 55,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate"
+      }
+    },
+    {
+      "url": "/donor",
+      "source": "src/app/donor/page.tsx",
+      "kind": "page",
+      "requested": "/donor",
+      "dynamicSegments": [],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=/donor",
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 46,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate"
+      }
+    },
+    {
+      "url": "/og",
+      "source": "src/app/og/route.tsx",
+      "kind": "api",
+      "requested": "/og",
+      "dynamicSegments": [],
+      "status": 200,
+      "redirectTo": null,
+      "contentType": "image/png",
+      "durationMs": 387,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "public, max-age=0, must-revalidate"
+      }
+    },
+    {
+      "url": "/uploads/[...path]",
+      "source": "src/app/uploads/[...path]/route.ts",
+      "kind": "api",
+      "requested": "/uploads/smoke/segment",
+      "dynamicSegments": [
+        "path"
+      ],
+      "status": 404,
+      "redirectTo": null,
+      "contentType": "text/plain;charset=UTF-8",
+      "durationMs": 7,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": null
+      }
+    },
+    {
+      "url": "/volunteer",
+      "source": "src/app/volunteer/page.tsx",
+      "kind": "page",
+      "requested": "/volunteer",
+      "dynamicSegments": [],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=/volunteer",
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 41,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate"
+      }
+    },
+    {
+      "url": "/volunteer/tasks",
+      "source": "src/app/volunteer/tasks/page.tsx",
+      "kind": "page",
+      "requested": "/volunteer/tasks",
+      "dynamicSegments": [],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=/volunteer/tasks",
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 39,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate"
+      }
+    },
+    {
+      "url": "/volunteer/tasks/[id]",
+      "source": "src/app/volunteer/tasks/[id]/page.tsx",
+      "kind": "page",
+      "requested": "/volunteer/tasks/smoke-test-id",
+      "dynamicSegments": [
+        "id"
+      ],
+      "status": 307,
+      "redirectTo": "/admin/login?callbackUrl=/volunteer/tasks",
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 37,
+      "securityHeaders": {
+        "x-content-type-options": "nosniff",
+        "cache-control": "private, no-cache, no-store, max-age=0, must-revalidate"
+      }
+    }
+  ],
+  "findings": [],
+  "tests": [
+    {
+      "test_id": "SMOKE-/[locale]",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/en",
+      "exit_code": 0,
+      "duration_ms": 256,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/[locale]/[...rest]",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/en/smoke/segment",
+      "exit_code": 0,
+      "duration_ms": 462,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/[locale]/about",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/en/about",
+      "exit_code": 0,
+      "duration_ms": 509,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/[locale]/activities",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/en/activities",
+      "exit_code": 0,
+      "duration_ms": 516,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/[locale]/activities/[slug]",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/en/activities/smoke-test-slug",
+      "exit_code": 0,
+      "duration_ms": 430,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/[locale]/certificates",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/en/certificates",
+      "exit_code": 0,
+      "duration_ms": 77,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/[locale]/contact",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/en/contact",
+      "exit_code": 0,
+      "duration_ms": 150,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/[locale]/documents",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/en/documents",
+      "exit_code": 0,
+      "duration_ms": 142,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/[locale]/documents/[slug]",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/en/documents/smoke-test-slug",
+      "exit_code": 0,
+      "duration_ms": 109,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/[locale]/gallery",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/en/gallery",
+      "exit_code": 0,
+      "duration_ms": 122,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/[locale]/gallery/[slug]",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/en/gallery/smoke-test-slug",
+      "exit_code": 0,
+      "duration_ms": 81,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/[locale]/impact",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/en/impact",
+      "exit_code": 0,
+      "duration_ms": 115,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/[locale]/news",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/en/news",
+      "exit_code": 0,
+      "duration_ms": 129,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/[locale]/news/[slug]",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/en/news/smoke-test-slug",
+      "exit_code": 0,
+      "duration_ms": 94,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/[locale]/privacy",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/en/privacy",
+      "exit_code": 0,
+      "duration_ms": 129,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/[locale]/projects",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/en/projects",
+      "exit_code": 0,
+      "duration_ms": 128,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/[locale]/projects/[slug]",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/en/projects/smoke-test-slug",
+      "exit_code": 0,
+      "duration_ms": 90,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/[locale]/reports",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/en/reports",
+      "exit_code": 0,
+      "duration_ms": 160,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/[locale]/reports/[slug]",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/en/reports/smoke-test-slug",
+      "exit_code": 0,
+      "duration_ms": 131,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/[locale]/search",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/en/search",
+      "exit_code": 0,
+      "duration_ms": 44,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/[locale]/stories",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/en/stories",
+      "exit_code": 0,
+      "duration_ms": 135,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/[locale]/stories/[slug]",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/en/stories/smoke-test-slug",
+      "exit_code": 0,
+      "duration_ms": 73,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/[locale]/terms",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/en/terms",
+      "exit_code": 0,
+      "duration_ms": 77,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/[locale]/trustees",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/en/trustees",
+      "exit_code": 0,
+      "duration_ms": 79,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/[locale]/trustees/[slug]",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/en/trustees/smoke-test-slug",
+      "exit_code": 0,
+      "duration_ms": 60,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/[locale]/verification",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/en/verification",
+      "exit_code": 0,
+      "duration_ms": 115,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/[locale]/verification/registration",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/en/verification/registration",
+      "exit_code": 0,
+      "duration_ms": 355,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/admin",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/admin",
+      "exit_code": 0,
+      "duration_ms": 11,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/admin/[resource]",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/admin/smoke-resource",
+      "exit_code": 0,
+      "duration_ms": 4,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/admin/[resource]/[id]",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/admin/smoke-resource/smoke-test-id",
+      "exit_code": 0,
+      "duration_ms": 3,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/admin/[resource]/new",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/admin/smoke-resource/new",
+      "exit_code": 0,
+      "duration_ms": 3,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/admin/account",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/admin/account",
+      "exit_code": 0,
+      "duration_ms": 4,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/admin/approvals",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/admin/approvals",
+      "exit_code": 0,
+      "duration_ms": 3,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/admin/categories",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/admin/categories",
+      "exit_code": 0,
+      "duration_ms": 3,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/admin/clubs",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/admin/clubs",
+      "exit_code": 0,
+      "duration_ms": 3,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/admin/clubs/[id]",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/admin/clubs/smoke-test-id",
+      "exit_code": 0,
+      "duration_ms": 3,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/admin/donations",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/admin/donations",
+      "exit_code": 0,
+      "duration_ms": 4,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/admin/fundraising",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/admin/fundraising",
+      "exit_code": 0,
+      "duration_ms": 3,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/admin/fundraising/[projectId]",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/admin/fundraising/smoke-projectId",
+      "exit_code": 0,
+      "duration_ms": 3,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/admin/fundraising/requests/[id]",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/admin/fundraising/requests/smoke-test-id",
+      "exit_code": 0,
+      "duration_ms": 3,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/admin/login",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/admin/login",
+      "exit_code": 0,
+      "duration_ms": 49,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/admin/media",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/admin/media",
+      "exit_code": 0,
+      "duration_ms": 33,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/admin/messages",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/admin/messages",
+      "exit_code": 0,
+      "duration_ms": 7,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/admin/navigation",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/admin/navigation",
+      "exit_code": 0,
+      "duration_ms": 7,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/admin/project-operations",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/admin/project-operations",
+      "exit_code": 0,
+      "duration_ms": 4,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/admin/project-operations/[id]",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/admin/project-operations/smoke-test-id",
+      "exit_code": 0,
+      "duration_ms": 3,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/admin/settings",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/admin/settings",
+      "exit_code": 0,
+      "duration_ms": 3,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/admin/social",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/admin/social",
+      "exit_code": 0,
+      "duration_ms": 4,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/admin/translations",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/admin/translations",
+      "exit_code": 0,
+      "duration_ms": 4,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/admin/trust",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/admin/trust",
+      "exit_code": 0,
+      "duration_ms": 4,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/admin/users",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/admin/users",
+      "exit_code": 0,
+      "duration_ms": 3,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/admin/volunteers",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/admin/volunteers",
+      "exit_code": 0,
+      "duration_ms": 3,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/api/admin/clubs/[id]/documents",
+      "type": "api",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/api/admin/clubs/smoke-test-id/documents",
+      "exit_code": 0,
+      "duration_ms": 99,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/api/admin/donations/[id]/evidence",
+      "type": "api",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/api/admin/donations/smoke-test-id/evidence",
+      "exit_code": 0,
+      "duration_ms": 105,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/api/admin/donations/evidence/[id]/file",
+      "type": "api",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/api/admin/donations/evidence/smoke-test-id/file",
+      "exit_code": 0,
+      "duration_ms": 115,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/api/admin/fundraising/evidence/[id]/file",
+      "type": "api",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/api/admin/fundraising/evidence/smoke-test-id/file",
+      "exit_code": 0,
+      "duration_ms": 24,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/api/admin/fundraising/requests/[id]/evidence",
+      "type": "api",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/api/admin/fundraising/requests/smoke-test-id/evidence",
+      "exit_code": 0,
+      "duration_ms": 22,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/api/admin/media",
+      "type": "api",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/api/admin/media",
+      "exit_code": 0,
+      "duration_ms": 17,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/api/admin/media/[id]/file",
+      "type": "api",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/api/admin/media/smoke-test-id/file",
+      "exit_code": 0,
+      "duration_ms": 21,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/api/admin/upload",
+      "type": "api",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/api/admin/upload",
+      "exit_code": 0,
+      "duration_ms": 14,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/api/auth/[...nextauth]",
+      "type": "api",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/api/auth/smoke/segment",
+      "exit_code": 0,
+      "duration_ms": 16,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/api/club/documents/[id]/file",
+      "type": "api",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/api/club/documents/smoke-test-id/file",
+      "exit_code": 0,
+      "duration_ms": 19,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/api/project-tasks/[id]/evidence",
+      "type": "api",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/api/project-tasks/smoke-test-id/evidence",
+      "exit_code": 0,
+      "duration_ms": 16,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/api/task-evidence/[id]/file",
+      "type": "api",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/api/task-evidence/smoke-test-id/file",
+      "exit_code": 0,
+      "duration_ms": 28,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/club",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/club",
+      "exit_code": 0,
+      "duration_ms": 44,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/club/[id]",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/club/smoke-test-id",
+      "exit_code": 0,
+      "duration_ms": 55,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/club/projects",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/club/projects",
+      "exit_code": 0,
+      "duration_ms": 40,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/club/projects/[assignmentId]",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/club/projects/smoke-assignmentId",
+      "exit_code": 0,
+      "duration_ms": 55,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/donor",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/donor",
+      "exit_code": 0,
+      "duration_ms": 46,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/og",
+      "type": "api",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/og",
+      "exit_code": 0,
+      "duration_ms": 387,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/uploads/[...path]",
+      "type": "api",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/uploads/smoke/segment",
+      "exit_code": 0,
+      "duration_ms": 7,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/volunteer",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/volunteer",
+      "exit_code": 0,
+      "duration_ms": 41,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/volunteer/tasks",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/volunteer/tasks",
+      "exit_code": 0,
+      "duration_ms": 39,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    },
+    {
+      "test_id": "SMOKE-/volunteer/tasks/[id]",
+      "type": "e2e-web",
+      "status": "EXECUTED-PASS",
+      "command": "GET http://localhost:3100/volunteer/tasks/smoke-test-id",
+      "exit_code": 0,
+      "duration_ms": 37,
+      "evidence": [
+        "qa/reports/route-smoke.json"
+      ]
+    }
+  ],
+  "warnings": []
+}

@@ -1,0 +1,1022 @@
+{
+  "run": {
+    "phase": "8 — bug investigation / root-cause grouping",
+    "mode": "static analysis only; no application, no database",
+    "scope": "the 34 non-FIXED findings in qa/reports/findings.json; no new-defect discovery was attempted",
+    "note": "Entries with QA-ROOT-* ids are root-cause grouping records, not new defects. Entries re-issued under an existing id carry a `severity_revision` or `status_revision` field and are PROPOSALS pending human acceptance; if the merge keeps the earlier entry, the same argument is preserved in the QA-ROOT record that governs it and in qa/reports/bug-analysis.md.",
+    "generatedBy": "complete-application-qa — qa-bug-investigator"
+  },
+  "findings": [
+    {
+      "id": "QA-ROOT-001",
+      "module": "Cross-cutting",
+      "feature": "Root-cause group A — pattern present in N places, missing in one or two",
+      "finding": "The dominant defect generator in this codebase is not absent knowledge but unenforced convention: a correct pattern exists in several places and is missing in one or two more. Six of the eight findings fixed this run were this shape, and six open findings still are. Patching each site individually has no regression-prevention value, because the next route or form added repeats the drift; only extracting the shared helper and adding a mechanical check closes the family",
+      "severity": "Medium",
+      "status": "CONFIRMED",
+      "evidence": [
+        "qa/reports/findings.json — QA-AUTH-001, QA-API-001, QA-DB-003, QA-FLOW-001 all FIXED, and all four root_cause fields say some variant of 'the pattern established elsewhere was not applied here'",
+        "src/app/api/admin/upload/route.ts:11 — sameOrigin() checks host only, while src/app/api/admin/donations/[id]/evidence/route.ts:13 checks host and protocol (QA-API-003)",
+        "src/server/actions/admin-helpers.ts:36 — the shared admin wrapper exists and is the natural home for the error-shape convention that QA-API-004 reports as drifting",
+        "src/components/admin/project-operations.tsx:60 — two reason inputs in one file, one with required minLength and one without (QA-UI-001)",
+        "src/lib/i18n/localized.ts:47 — the lossy text() helper is more convenient to call than the faithful resolve(), which is why 48 call sites use it (QA-I18N-005)"
+      ],
+      "reproduction": [
+        "Read the root_cause field of QA-AUTH-001, QA-API-001, QA-DB-003, QA-FLOW-001, QA-API-003, QA-API-004, QA-UI-001, QA-UI-003 and QA-I18N-005 in qa/reports/findings.json",
+        "Observe that every one of the nine names a sibling implementation that does the right thing"
+      ],
+      "expected": "Where a security or validation pattern must hold in several places, one implementation is shared and the un-shared form is mechanically impossible or at least flagged",
+      "actual": "Each pattern is copy-pasted per call site. The stricter version is written later and not back-ported, so the oldest call site is reliably the weakest one",
+      "root_cause": "No shared-helper convention and no lint rule for the cross-cutting patterns (same-origin, error shape, client validation mirror, localized text). Correctness depends on the author remembering a sibling file",
+      "uncertainty": null,
+      "affected_modules": [
+        "API routes",
+        "Admin UI",
+        "Club portal",
+        "Volunteer portal",
+        "Internationalization"
+      ],
+      "user_impact": "Indirect but compounding: every new route or form is an independent chance to omit a check that four siblings perform. QA-API-001 (a private-file authorization gap) was exactly this, and it reached a shipped route",
+      "recommendation": "Group members: QA-API-003, QA-API-004, QA-UI-001, QA-UI-003, QA-I18N-005 (and QA-AUTH-004 partially). Three extractions close five of them: (1) one sameOrigin(request) helper in src/lib used by all five upload routes — closes QA-API-003; (2) include error.code in the shared catch in src/server/actions/admin-helpers.ts and the route equivalent — closes QA-API-004 in one place rather than per module; (3) one ReasonInput component carrying required minLength={3} — closes QA-UI-001 and QA-UI-003. Pair each with the mechanical check that forbids the un-shared form, or the family regenerates",
+      "regression_coverage": [
+        "Proposed: a lint rule forbidding inline origin comparison outside the shared helper",
+        "Proposed: a test asserting every route/action catch block returns a code field",
+        "Proposed: a lint rule forbidding text() in visible-content JSX positions (QA-I18N-005)"
+      ],
+      "confidence": "high",
+      "group_members": ["QA-API-003", "QA-API-004", "QA-UI-001", "QA-UI-003", "QA-I18N-005", "QA-AUTH-004"],
+      "group_closed_members": ["QA-AUTH-001", "QA-API-001", "QA-DB-003", "QA-FLOW-001"]
+    },
+    {
+      "id": "QA-ROOT-002",
+      "module": "Admin portal",
+      "feature": "Root-cause group B — destructive action with no dependency pre-check, over a wrapper that cannot explain the database's refusal",
+      "finding": "Three findings in this class were fixed by adding a bespoke pre-delete check to each action, but the shared cause was never addressed: adminMutation does not map Prisma P2003, so any foreign-key refusal anywhere in the admin surface — present or future — surfaces as 'Something went wrong. Please try again.' One four-line change to the shared wrapper covers deleteUser and every action not yet written, and would have made all three earlier fixes optional rather than necessary",
+      "severity": "Medium",
+      "status": "CONFIRMED",
+      "evidence": [
+        "src/server/actions/admin-helpers.ts:27 — P2002 is mapped to a friendly message",
+        "src/server/actions/admin-helpers.ts:36 — P2025 is mapped to a friendly message",
+        "src/server/actions/admin-helpers.ts:38 — every other Prisma error, including P2003 foreign-key violations, falls through to console.error",
+        "src/server/actions/admin-helpers.ts:39 — and returns the generic 'Something went wrong. Please try again.'",
+        "src/server/actions/admin/settings.ts:127 — db.user.delete() with no dependent-row check, against a User model whose ~25 inverse relations are onDelete: Restrict (QA-DB-002)",
+        "src/server/actions/admin/media.ts:51 — findDeletionBlocker(), the per-action pattern added this run for QA-DB-001/QA-FLOW-002, which is the template for a deleteUser pre-check",
+        "src/server/actions/admin/trust.ts — deleteCategory() usage count added this run for QA-DB-007"
+      ],
+      "reproduction": [
+        "Read src/server/actions/admin-helpers.ts:25-39 and list the Prisma codes handled: P2002 and P2025 only",
+        "Read src/server/actions/admin/settings.ts:122-134 and confirm no count query precedes db.user.delete()",
+        "Conclude that deleting any user with a single ClubMembership, approval decision or created club returns the generic message"
+      ],
+      "expected": "A database refusal that the user can act on produces a message the user can act on. A shared mutation wrapper that already translates two Prisma codes translates the third, which is the one destructive actions actually hit",
+      "actual": "P2003 is unmapped. The three fixes landed this run each added a bespoke pre-check so the raw error would not be reached; the wrapper behind them is unchanged, so the next delete action added repeats QA-DB-002",
+      "root_cause": "Error mapping was extended reactively, one Prisma code at a time, as specific failures were observed — never from the schema's delete-behaviour declarations, where Restrict is the dominant choice",
+      "uncertainty": null,
+      "affected_modules": [
+        "Admin — Users",
+        "Admin — Media",
+        "Admin — Taxonomy",
+        "Every admin mutation"
+      ],
+      "user_impact": "An administrator performing a destructive action that the database correctly refuses is told nothing useful and has no path forward. For deleteUser specifically, there is no way to remove a departed staff member and no explanation of why",
+      "recommendation": "Group members: QA-DB-002 (open), QA-DB-001, QA-DB-007, QA-FLOW-002 (FIXED, same cause). Rank 1 of the fix proposals: map P2003 (and P2014) in src/server/actions/admin-helpers.ts to 'This record is still referenced by other data and cannot be deleted.' — four lines, one file, no behaviour change on any success path, and it retro-covers the failure mode of three already-fixed findings. Then add the deleteUser pre-check as a UX refinement using findDeletionBlocker() as the template",
+      "regression_coverage": [
+        "Proposed: a test that provokes a P2003 through adminMutation and asserts a specific, non-generic message",
+        "Proposed: assert deleteUser() on a user with one ClubMembership returns that message rather than throwing"
+      ],
+      "confidence": "high",
+      "group_members": ["QA-DB-002"],
+      "group_closed_members": ["QA-DB-001", "QA-DB-007", "QA-FLOW-002"]
+    },
+    {
+      "id": "QA-ROOT-003",
+      "module": "Cross-cutting",
+      "feature": "Root-cause group C — list query written without the pagination convention",
+      "finding": "Four open findings are one defect repeated: a findMany on a page or query module with no take, or a fixed take with no way to reach the next page, in a codebase where five sibling lists correctly paginate. The worst instance is the mandatory entry point for the membership-approval workflow, which issues an unbounded select over the whole User table",
+      "severity": "Medium",
+      "status": "CONFIRMED",
+      "evidence": [
+        "src/app/admin/(dashboard)/clubs/[id]/page.tsx:15 — club.findUnique includes memberships with no take and, nested inside each, history with no take",
+        "src/app/admin/(dashboard)/clubs/[id]/page.tsx:16 — db.user.findMany({ orderBy: { email: 'asc' } }) with no take, every account in the system",
+        "src/app/admin/(dashboard)/clubs/[id]/page.tsx:17 — the audit query on the same page is correctly capped at take: 30, so the convention was known while the file was written",
+        "src/app/club/[id]/page.tsx:17 — memberships and documents, both unbounded (QA-API-002)",
+        "src/server/queries/admin.ts:364 — listMedia() take: 500 with no cursor (QA-DB-006)",
+        "src/app/donor/page.tsx:14 — donations take: 100 with no pagination (QA-FLOW-010)",
+        "src/app/admin/(dashboard)/volunteers/page.tsx:22 — the sibling that does it correctly, skip/take 30"
+      ],
+      "reproduction": [
+        "Read src/app/admin/(dashboard)/clubs/[id]/page.tsx:14-18 and note three of the four lists have no take while the fourth does",
+        "Read src/app/club/[id]/page.tsx:17, src/server/queries/admin.ts:364 and src/app/donor/page.tsx:14",
+        "Compare against src/app/admin/(dashboard)/volunteers/page.tsx:22 and src/app/club/projects/page.tsx:11"
+      ],
+      "expected": "Every list rendered by a page or returned by a query module is bounded and, where the data can exceed the bound, reachable by pagination",
+      "actual": "Four lists are unbounded or capped-without-pagination. The admin club page additionally serialises every account's name and email into the client payload, and the nested memberships x history shape makes the row count a product rather than a sum",
+      "root_cause": "The pagination convention settled after these pages were written, and no mechanical check exists; the invite picker needed 'all users' as a conceptual input and that was implemented literally",
+      "uncertainty": "Severity is reasoned from query shape, not a measured row count or query plan — no database was authorized for this run. The ordering within the group is not in doubt; the absolute cost is",
+      "affected_modules": [
+        "Admin — Clubs",
+        "Admin — Media",
+        "Club portal",
+        "Donor portal"
+      ],
+      "user_impact": "The membership-approval workflow degrades on the one page it cannot avoid, as the account table grows. Separately, media older than the 500th most recent becomes unreachable from the admin UI, and the library's search box makes that worse rather than better because it filters client-side over the same capped 500 rows",
+      "recommendation": "Group members: QA-FLOW-006, QA-API-002, QA-DB-006, QA-FLOW-010 (pagination half). Fix in this order, because the effort is near-identical and the exposure is not: (1) QA-FLOW-006 — cap the three lists on the admin club page, copying take: 500 / take: 200 from src/app/admin/(dashboard)/project-operations/[id]/page.tsx:20-21 and take: 5 for the nested history; (2) QA-API-002 — same change on the coordinator workspace; (3) QA-DB-006 — give listMedia() a cursor and move the search server-side; (4) QA-FLOW-010 — donor history pagination. Then add the durable guard: a lint rule or review check that every findMany outside a count/aggregate carries a take",
+      "regression_coverage": [
+        "Proposed: seed 1000 users and a club with 200 members, assert the /admin/clubs/<id> payload is bounded",
+        "Proposed: seed 501 media rows and assert the 501st is reachable through some admin path"
+      ],
+      "confidence": "high",
+      "group_members": ["QA-FLOW-006", "QA-API-002", "QA-DB-006", "QA-FLOW-010"]
+    },
+    {
+      "id": "QA-ROOT-004",
+      "module": "Public site",
+      "feature": "Root-cause group D — no single definition of an evidence-backed public claim",
+      "finding": "Three findings are one missing rule. The product exists to make public claims inspectable, but there is no written definition of what qualifies as a claim, so each surface decided independently: the Evidence Center requires a document, the home hero accepts a typed-in number, the testimonial carousel accepts a bare checkbox, and the donor portal states a privacy guarantee no code enforces. This group needs a human decision before any code changes; it cannot be ranked by effort because the effort is a decision, not a diff",
+      "severity": "High",
+      "status": "NEEDS-HUMAN-REVIEW",
+      "evidence": [
+        "src/components/trust/hero.tsx:21 — the component's own comment states the rule it implements: 'Registered trust appears only when a registration number or registration document exists'",
+        "src/components/trust/hero.tsx:27 — if (trust.registration.number || trust.registration.document) — the number alone is sufficient",
+        "src/server/queries/public/evidence.ts:222 — registrationCount counts trust.registration.document only",
+        "APPLICATION_CONTEXT.md:107 — 'registration coverage does not treat a bare registration number as inspectable evidence'",
+        "src/lib/validations/admin.ts:228 — relationshipVerified is an unconstrained checkbox",
+        "src/lib/view-models.ts:103 — it becomes the public label 'Relationship confirmed by the trust'",
+        "src/lib/validations/admin.ts:212 — the comparable claim, a published impact figure, does require a method or a source, so the rule exists in one schema and not the other",
+        "scripts/audit-demo.ts:113 — the demo auditor asserts no demo testimonial is relationship-verified, which shows the flag is already treated internally as a verification claim",
+        "src/app/donor/page.tsx:19 — 'Anonymous display is the default' — a guarantee with no reader of anonymousByDefault anywhere"
+      ],
+      "reproduction": [
+        "Read src/components/trust/hero.tsx:21-27 and APPLICATION_CONTEXT.md:107 and observe two different rules for the same claim",
+        "Read src/lib/validations/admin.ts:212 and :228 and observe that one public claim requires a source and the adjacent one requires nothing",
+        "Read src/app/donor/page.tsx:19 and grep src/ for anonymousByDefault — the only hits are a schema default and a disabled form control"
+      ],
+      "expected": "One written rule — a public claim carrying verification language is backed by a record naming what was checked, by whom and when — applied identically on every surface that renders such a claim",
+      "actual": "Three surfaces, three rules, none of them written down as a rule. The strongest claim in the product ('Relationship confirmed by the trust') has the weakest backing (an unconstrained checkbox)",
+      "root_cause": "The honesty rules exist as prose in README.md:71-82 and as per-feature schema refinements, but not as a single definition any surface is checked against. Each new claim-rendering surface re-derives the rule, or does not",
+      "uncertainty": "Which side is wrong is a product decision, not a testable proposition. The code behaviour on all three surfaces is proven by reading; what is undecided is the rule itself. The decision owner is the trust, not QA",
+      "affected_modules": [
+        "Public site",
+        "Evidence Center",
+        "Testimonials",
+        "Trust identity",
+        "Donor portal"
+      ],
+      "user_impact": "A visitor to a transparency site reads a verification badge and finds nothing behind it. This is the specific failure the product was built to prevent, which is why the group is High even though no single member is",
+      "recommendation": "Group members: QA-REQ-004, QA-REQ-002, QA-FLOW-010 (anonymity copy half). One decision closes all three: write the claim rule into APPLICATION_CONTEXT.md, then apply it at the three sites. Recommended answers, for the trust to accept or reject: (a) QA-REQ-004 — drop the public badge, keep relationshipVerified as an internal triage flag; it is the only change that needs no new data model; (b) QA-REQ-002 — keep the chip but relabel the number-only case 'Registration number recorded' and link it to the Evidence Center, since a registration number is independently checkable in a public register even though it is not inspectable here; (c) QA-FLOW-010 — reword the donor copy to describe current scope ('no donor display exists yet') rather than promise a policy. Do not implement any of these until the rule itself is accepted",
+      "regression_coverage": [
+        "Proposed: a test per claim surface asserting the claim is absent when its backing record is absent",
+        "Proposed: assert no public query returns a donor identity, for as long as that is the intended rule"
+      ],
+      "confidence": "high",
+      "group_members": ["QA-REQ-004", "QA-REQ-002", "QA-FLOW-010"]
+    },
+    {
+      "id": "QA-ROOT-005",
+      "module": "Documentation",
+      "feature": "Root-cause group E — documentation describing code that changed under it",
+      "finding": "Four findings are one maintenance failure with no decision attached: the code is right and the prose is stale. Grouping them matters because one of the four — QA-REQ-006 — was filed as a privacy defect on the strength of the stale prose, and acting on it as filed would remove a coordinator capability that every affected member has explicitly consented to in writing",
+      "severity": "Low",
+      "status": "CONFIRMED",
+      "evidence": [
+        "src/lib/validations/club.ts:4 — CLUB_CONSENT_TEXT: 'I agree that Trustfolio staff and the club coordinator may use my account name and email to review and manage my club membership.'",
+        "src/server/clubs/service.ts:153 — approval is refused unless consentAt, adultAttestedAt and the current consentVersion are all present, so no membership reaches ACTIVE without that consent",
+        "src/app/club/[id]/page.tsx:17 — the workspace lists memberships where status is ACTIVE only",
+        "APPLICATION_CONTEXT.md:58 — 'Club coordinators see only an active member's opted-in skills/interests', which omits the consented roster",
+        "APPLICATION_CONTEXT.md:111 — three October gaps presented as current behaviour, all three closed in code (QA-REQ-001)",
+        "README.md:113 — 'every action or route calls requireAdmin()', which three API routes and four portal action modules deliberately do not (QA-REQ-005)",
+        "src/components/admin/media-library.tsx:220 — delete dialog promises unconditional removal; src/server/actions/admin/media.ts:51 now refuses deletion in thirteen more cases than when the copy was written (QA-UI-002)"
+      ],
+      "reproduction": [
+        "Read src/lib/validations/club.ts:4, then src/server/clubs/service.ts:153, then APPLICATION_CONTEXT.md:58 — the consent authorises exactly what the doc says the coordinator cannot see",
+        "Read APPLICATION_CONTEXT.md:109-117 and the four source files cited by QA-REQ-001",
+        "Read README.md:112-115 against src/app/api/club/documents/[id]/file/route.ts:8",
+        "Read src/components/admin/media-library.tsx:215-223 against src/server/actions/admin/media.ts:51-95"
+      ],
+      "expected": "A statement about behaviour either matches the behaviour or is dated and marked resolved; user-facing copy describing an outcome describes the outcome the server produces",
+      "actual": "Four statements describe superseded behaviour. Three are harmless to a user and misleading to a reviewer; the fourth (the delete dialog) is read by an administrator mid-action",
+      "root_cause": "Documentation and confirmation copy are written per feature and never re-verified against the code they describe, and nothing links a statement to the file:line it is about",
+      "uncertainty": null,
+      "affected_modules": [
+        "Documentation",
+        "Club portal",
+        "Media library",
+        "Documents & privacy"
+      ],
+      "user_impact": "None at runtime for three of the four. The real cost is the one demonstrated by QA-REQ-006: a later reviewer trusts the stale prose, files a defect against correct code, and the proposed remedy damages a working, consented workflow",
+      "recommendation": "Group members: QA-REQ-001, QA-REQ-005, QA-REQ-006 (re-stated as documentation, see its revised entry), QA-UI-002. Rank 2 of the fix proposals: one documentation commit, zero application risk, closes four findings. Correct APPLICATION_CONTEXT.md:58 and docs/security/permissions-matrix.md:7 to state that a coordinator sees the active-member roster (name and email, per the accepted consent) plus opted-in skills; move the three closed gaps at APPLICATION_CONTEXT.md:111-117 into a dated resolved list; rewrite README.md:113 to name both authorization patterns; update the delete-dialog copy. Adopt the convention that any statement about behaviour cites the file:line it describes",
+      "regression_coverage": [
+        "Proposed: assert CLUB_CONSENT_TEXT and the permissions matrix name the same data (a string containment check is enough)"
+      ],
+      "confidence": "high",
+      "group_members": ["QA-REQ-001", "QA-REQ-005", "QA-REQ-006", "QA-UI-002"]
+    },
+    {
+      "id": "QA-ROOT-006",
+      "module": "Schema",
+      "feature": "Root-cause group F — capability built below the UI with no consumer and no marker",
+      "finding": "Three open Informational findings, plus halves of three others, are one habit: a column, enum member or service capability is built ahead of the thing that will use it, with nothing recording that it is reserved. The brief grouped QA-DATA-006 here; that is incorrect and the correction matters — ImpactMetric.value is written on every metric, so it is a numeric-type question, not a dead-surface one. QA-UI-004, which the brief did not name, is a member",
+      "severity": "Informational",
+      "status": "CONFIRMED",
+      "evidence": [
+        "prisma/schema.prisma:1257 — ProjectTaskEvidence.archivedAt, filtered on read, never written (QA-DB-004)",
+        "prisma/schema.prisma:1384 — anonymousByDefault, default true, no reader (QA-REQ-007)",
+        "src/components/admin/donation-intake.tsx:37 — a hardcoded empty campaignId hidden input over a service that fully supports campaign linkage (QA-UI-004)",
+        "prisma/schema.prisma:202 — ClubMembershipStatus.DRAFT, no writer (the dead half of QA-FLOW-004)",
+        "prisma/schema.prisma — NotificationStatus.SENT and FAILED, unreachable because no consumer exists (the enum half of QA-NOTIFY-007)",
+        "src/app/donor/page.tsx:18 — a status cell hardcoded to the only enum member, correct today by coincidence (the constant half of QA-FLOW-010)",
+        "src/auth.config.ts — the dead authorized() callback removed this run was the same habit (QA-FLOW-005, FIXED)",
+        "prisma/schema.prisma:1510 — ImpactMetric.value Float: written on every metric, so NOT a member of this group; QA-DATA-006 is a numeric-type decision, already triaged wontfix"
+      ],
+      "reproduction": [
+        "Grep src/server for 'archivedAt: new Date()' — one match, on ClubDocument only",
+        "Grep src/ for anonymousByDefault — a schema default and a disabled control",
+        "Grep src/server for a NotificationOutbox status update — none",
+        "Grep src/server for a clubMembership write setting DRAFT — none"
+      ],
+      "expected": "A schema surface with no writer is either wired to a consumer or listed as reserved somewhere a reviewer and a later implementer will both look",
+      "actual": "Six dead surfaces, no register. Each one is harmless alone and each one costs a reviewer the time to prove it is harmless",
+      "root_cause": "Phased delivery writes the durable half (schema, service) before the reachable half (UI, worker), which is sound, but nothing records the intent, so a dead surface is indistinguishable from an omission",
+      "uncertainty": null,
+      "affected_modules": [
+        "Project task evidence",
+        "Donations",
+        "Donor portal",
+        "Club portal",
+        "Notifications"
+      ],
+      "user_impact": "None present in any member. The forward risk is the one QA-REQ-007 names: a later public donor view gets built without honouring anonymousByDefault, because nothing fails when it is ignored",
+      "recommendation": "Group members: QA-DB-004, QA-REQ-007, QA-UI-004, plus the dead halves of QA-FLOW-004, QA-NOTIFY-007 and QA-FLOW-010. Not members: QA-DATA-006. One change closes the three Informational findings and prevents recurrence: add a RESERVED section to APPLICATION_CONTEXT.md listing each surface and the phase that will consume it, and add one cheap test — every enum member declared in schema.prisma has a writer in src/, and every nullable column that a read path filters on has a writer — with the reserved list as its allowlist. Do this when next touching these files; it does not justify its own work item",
+      "regression_coverage": [
+        "Proposed: dead-schema-surface test with an explicit reserved allowlist"
+      ],
+      "confidence": "high",
+      "group_members": ["QA-DB-004", "QA-REQ-007", "QA-UI-004"]
+    },
+    {
+      "id": "QA-ROOT-007",
+      "module": "Club portal",
+      "feature": "Root-cause group G — state machine without an explicit transition table",
+      "finding": "QA-FLOW-004 is one defect with two halves that need different decisions. The bug half is unambiguous: the admin UI offers SUSPENDED as a target and no code path leaves it, so a reversible-sounding action is irreversible. The feature half is not a bug at all: nobody has defined what reinstating a suspended membership restores, and that question has to be answered before a SUSPENDED to ACTIVE transition can be written",
+      "severity": "High",
+      "status": "NEEDS-HUMAN-REVIEW",
+      "evidence": [
+        "src/server/actions/admin/clubs.ts:112 — endMembership offers SUSPENDED and ENDED as targets",
+        "src/server/clubs/service.ts:194 — closeClubMembership is the only writer of SUSPENDED",
+        "src/server/clubs/service.ts:193 — and requires current.status === 'ACTIVE', so it cannot act on a suspended row",
+        "src/server/clubs/service.ts:150 — reviewClubMembership requires REQUESTED",
+        "src/server/clubs/service.ts:136 — requestClubMembership excludes SUSPENDED",
+        "src/server/clubs/service.ts:117 — inviteClubMember excludes SUSPENDED",
+        "src/server/clubs/service.ts:67 — the Club status machine, by contrast, has an explicit transition table and does allow SUSPENDED to ACTIVE",
+        "src/server/clubs/service.ts:153 — reinstatement is not merely a status write: approval re-checks the current consent version, so a reinstatement path must decide whether a stale consent blocks it",
+        "docs/implementation/roadmap.md:44 — the Phase 2 scope names invitation, request, review, history and coordinator appointment; suspension and reinstatement are not named, so this is an implementation gap rather than a documented deferral"
+      ],
+      "reproduction": [
+        "Read src/server/actions/admin/clubs.ts:112 and confirm SUSPENDED is an offered target",
+        "Check each of the four transition functions for a SUSPENDED precursor — none has one",
+        "Conclude a suspended membership has no outbound transition in application code"
+      ],
+      "expected": "Either every status offered in the admin UI has a defined exit, or the status is not offered",
+      "actual": "An administrator can permanently remove a member with an action labelled as a suspension. The member cannot be reactivated, cannot be formally ended, and cannot re-apply. Their club-derived volunteer and project access is gone and the only remedy is direct SQL against production",
+      "root_cause": "The membership lifecycle has no transition table — each function hard-codes one precursor status — while the Club lifecycle next to it does have one. Nobody enumerated the status graph and checked it was connected",
+      "uncertainty": "The bug half is certain. The feature half is a design question with no cheap experiment: what reinstatement restores (task assignments, attendance history, a fresh consent attestation at the current version) must be decided, not discovered",
+      "affected_modules": [
+        "Club portal",
+        "Admin — Clubs",
+        "Volunteer portal",
+        "Project operations"
+      ],
+      "user_impact": "A member suspended by mistake is locked out of the club, their future attendance and hours, and every project task derived from that membership, with no in-application remedy. The destructiveness is invisible at the point of use",
+      "recommendation": "Split the work, not the finding. Immediately and cheaply: remove SUSPENDED from the endMembership target enum at src/server/actions/admin/clubs.ts:112, so the irreversible action can no longer be taken — one line, no new semantics, and it stops the bleeding. Separately, as scoped feature work: define reinstatement (does it require a fresh consent at CLUB_CONSENT_VERSION? does it restore prior task assignments?), then add an explicit transition table to the membership service mirroring src/server/clubs/service.ts:67, and only then re-offer SUSPENDED. Also drop or document the unreachable DRAFT member (see QA-ROOT-006)",
+      "regression_coverage": [
+        "Proposed: assert every ClubMembershipStatus value has at least one writer and, unless terminal by design, at least one outbound transition",
+        "Proposed: once reinstatement exists, assert it restores task and attendance access and re-checks the consent version"
+      ],
+      "confidence": "high",
+      "group_members": ["QA-FLOW-004"]
+    },
+    {
+      "id": "QA-ROOT-008",
+      "module": "Cross-cutting",
+      "feature": "Root-cause group H — client gate and server rule stated independently",
+      "finding": "Five open findings are the same shape: a UI renders a control the server will refuse, or hides one the server would accept, because the client gate and the server rule are written as two independent expressions of one business rule. The fix that landed for QA-FLOW-001 this run solved one instance by hand; the family closes only if the predicate is shared",
+      "severity": "Low",
+      "status": "CONFIRMED",
+      "evidence": [
+        "src/components/admin/volunteer-review.tsx:10 — a decision control rendered for every queued row with no actor-awareness, against a server ban at src/server/volunteers/service.ts:92 (QA-FLOW-007)",
+        "src/components/volunteer/task-progress.tsx:11 — one `editable` flag gates two capabilities whose server windows differ (QA-FLOW-009)",
+        "src/server/projects/service.ts:267 — the server evidence window, TODO or IN_PROGRESS only",
+        "src/components/admin/project-operations.tsx — the QA-FLOW-001 fix landed this run, which re-derived the same predicate a third time in a third file rather than importing it",
+        "src/components/admin/donation-intake.tsx:47 — a disabled submit button with no paired explanation (QA-UI-005)",
+        "src/auth.ts:41 — a rate-limited login returns the same null as a wrong password, so the UI cannot distinguish them (QA-AUTH-004)"
+      ],
+      "reproduction": [
+        "For each of the five, read the client gate and the server rule and confirm they are separate literals with no shared source"
+      ],
+      "expected": "One predicate per business rule, exported by the module that owns the rule and imported by every layer that must agree with it",
+      "actual": "Each layer restates the rule. Where the restatements differ, the user sees an enabled control that always fails, or a disabled control with no explanation",
+      "root_cause": "Server rules live in service modules and client gates live in components, with no convention for sharing a predicate across the boundary — so agreement is maintained by hand and drifts on every change to either side",
+      "uncertainty": null,
+      "affected_modules": [
+        "Admin UI",
+        "Volunteer portal",
+        "Project operations",
+        "Donations",
+        "Authentication"
+      ],
+      "user_impact": "Individually minor — an extra round trip, a confusing error, a control that cannot work. Collectively it is the reason users cannot trust what the UI tells them is possible, and QA-FLOW-009 means a volunteer can lose the ability to attach the evidence their work is judged on",
+      "recommendation": "Group members: QA-FLOW-007, QA-FLOW-009, QA-UI-005, QA-AUTH-004, and the client-mirror halves of QA-UI-001 and QA-UI-003 (filed under QA-ROOT-001). Cheapest high-value member first: QA-FLOW-007 — exclude the acting user's own rows from the review queue query at src/app/admin/(dashboard)/volunteers/page.tsx:24, one where clause. QA-FLOW-009 needs the product decision in its own entry (is SUBMITTED inside the evidence window?) before either layer changes. Then adopt the convention: export canAcceptEvidence(status), canReview(actorId, row) and similar from the service modules and import them in the components",
+      "regression_coverage": [
+        "Proposed: assert the review queue renders no decision control for a record owned by the acting administrator",
+        "Proposed: assert the server still refuses the action if the control is forced, so the UI change never becomes the only guard"
+      ],
+      "confidence": "high",
+      "group_members": ["QA-FLOW-007", "QA-FLOW-009", "QA-UI-005", "QA-AUTH-004"]
+    },
+    {
+      "id": "QA-ROOT-009",
+      "module": "Testing",
+      "feature": "Root-cause group I — test effort followed testability, not risk",
+      "finding": "QA-TEST-003 and QA-FLOW-008 are one root cause on two surfaces: the gate that guards every commit executes no line of any traced business workflow, authorization guard or API route handler. This is the enabling condition for most of the other groups, and it is load-bearing right now, because the eight fixes applied in this run were verified by typecheck, lint and a production build and by nothing that executes them",
+      "severity": "High",
+      "status": "CONFIRMED",
+      "evidence": [
+        "package.json:11 — test:unit runs six files: three pure schema/definition tests and three over modules with no importer in src/",
+        "package.json:12 — check = lint && typecheck && test:unit && build, so this is the gate",
+        "qa/reports/evidence/mechanical/test.log — the executed run, confirming which six files ran",
+        "src/server/actions/admin/media.ts:51 — findDeletionBlocker(), added this run, now decides media deletion against thirteen relations with no test that executes it",
+        "src/auth.ts:39 — the second login limiter, added this run, with no test that executes it",
+        "src/app/api/club/documents/[id]/file/route.ts — the storage-prefix authorization check added this run, with no test that executes it",
+        "src/server/clubs/service.ts:153 — the consent-version gate that the whole club privacy position rests on, untested",
+        "src/server/volunteers/service.ts:92 — a SELF_APPROVAL ban, untested"
+      ],
+      "reproduction": [
+        "Read package.json:11 and list the six files",
+        "Grep for a test importing src/server/clubs/service.ts, src/server/volunteers/service.ts, src/server/projects/service.ts, src/server/donations/service.ts or src/server/auth-guard.ts — there is none",
+        "Grep the repository for a test referencing /api/ — there is none"
+      ],
+      "expected": "The gate executes the invariants the product depends on: the three self-approval bans, the consent-version gates, the approved-hours invariant, the publication and deletion guards, the login limiters, and the three-actor authorization matrix on each private-file route",
+      "actual": "The gate runs six files in under two seconds and touches none of them. Typecheck cannot see a wrong enum literal in a Prisma filter, a predicate with inverted logic, or an authorization check placed after the thing it is meant to protect — which is precisely the class of mistake the eight landed fixes could contain",
+      "root_cause": "Test effort followed testability: pure functions were easy to isolate and the finance and payments modules were written test-first ahead of their consumers, while the service layer needs a database and was left to manual verification scripts that are not in the gate",
+      "uncertainty": null,
+      "affected_modules": [
+        "Testing",
+        "Authentication",
+        "Club portal",
+        "Volunteer portal",
+        "Project operations",
+        "Media & evidence storage",
+        "All API routes"
+      ],
+      "user_impact": "A regression that removes a self-approval ban, a consent-version check or a publication guard ships. Today the sharper risk is the inverse: eight fixes to authorization, deletion and rate-limiting code are in the tree with no behavioural evidence that any of them does what its commit message says",
+      "recommendation": "Group members: QA-FLOW-008, QA-TEST-003. Highest absolute risk reduction in the whole set and the highest effort, so take the minimal slice first rather than the programme: on a disposable Postgres schema in CI, cover (1) the three SELF_APPROVAL bans, (2) the consent-version gate at clubs/service.ts:153, (3) findDeletionBlocker across its four branches, (4) both login limiters, (5) the three-actor matrix on the four private-file routes. That is roughly a dozen tests and it puts the eight landed fixes and the highest-risk guards under the gate. Add npm run check:db to CI at the same time, since it already exists. Keep the finance and payments tests but mark those modules reserved (QA-ROOT-006) so their coverage is not read as workflow coverage",
+      "regression_coverage": [
+        "This group IS the regression coverage for most other groups; every other proposal's 'still needed' line resolves here"
+      ],
+      "confidence": "high",
+      "group_members": ["QA-FLOW-008", "QA-TEST-003"]
+    },
+    {
+      "id": "QA-ROOT-010",
+      "module": "QA process",
+      "feature": "Root-cause group J — one defect filed twice",
+      "finding": "QA-PROCESS-008 and QA-FLOW-011 are the same defect: three phase reports cited QA-NOTIFY-007 before it existed in findings.json. Two shards detected it independently and each filed it, so one defect is counted twice in the 42. Both are already remediated by the dangling-reference check added to validate-reports.mjs",
+      "severity": "Informational",
+      "status": "CONFIRMED",
+      "evidence": [
+        "qa/reports/findings.json — QA-PROCESS-008 'Finding citation integrity' and QA-FLOW-011 'Findings traceability' describe the same three citations of the same missing id",
+        "qa/reports/findings.json — QA-PROCESS-008 recommendation records that validate-reports.mjs now resolves every QA-<AREA>-<NNN> reference in qa/**/*.md against findings.json",
+        "qa/reports/findings.workflow.json — the shard that filed QA-FLOW-011",
+        "qa/reports/findings.orchestrator.json — the shard that filed QA-PROCESS-008"
+      ],
+      "reproduction": [
+        "Read QA-PROCESS-008 and QA-FLOW-011 in qa/reports/findings.json and compare their evidence lists — the same three citations, the same missing id"
+      ],
+      "expected": "One defect, one finding. The merge de-duplicates by id, which cannot detect two ids describing one defect",
+      "actual": "Two Low findings for one process defect, both already closed by the same single change",
+      "root_cause": "Two phases ran concurrently against a shared findings set and both noticed the same gap; shard de-duplication is by id, not by subject",
+      "uncertainty": null,
+      "affected_modules": ["QA process"],
+      "user_impact": "None in the application. In the audit it inflates the count by one and would produce two work items for one change",
+      "recommendation": "Keep QA-PROCESS-008 (it carries the remediation) and mark QA-FLOW-011 WONT-FIX as a duplicate of it, cross-referenced. Both can then be marked FIXED, since the validator check is in place — which takes the open count from 34 to 32 with no code change. The underlying process lesson is already enforced mechanically",
+      "regression_coverage": [
+        "validate-reports.mjs dangling-reference check"
+      ],
+      "confidence": "high",
+      "group_members": ["QA-PROCESS-008", "QA-FLOW-011"]
+    },
+    {
+      "id": "QA-REQ-006",
+      "module": "Documentation",
+      "feature": "Coordinator workspace — roster disclosure",
+      "finding": "Re-stated after reading the consent text. The coordinator workspace does list every active member's name and email, but every member whose email is shown has explicitly agreed, at the current consent version, that 'Trustfolio staff and the club coordinator may use my account name and email to review and manage my club membership'. The defect is not a privacy violation in the code; it is that two internal documents describe the coordinator's view more narrowly than the consent the member accepted",
+      "severity": "Low",
+      "status": "CONFIRMED",
+      "evidence": [
+        "src/lib/validations/club.ts:4 — CLUB_CONSENT_TEXT names exactly 'account name and email' and exactly 'the club coordinator'",
+        "src/components/club/membership-request.tsx:16 — the consent checkbox is required at the point of requesting membership",
+        "src/server/clubs/service.ts:138 — requestClubMembership records consentAt, adultAttestedAt and consentVersion",
+        "src/server/clubs/service.ts:119 — inviteClubMember explicitly nulls consentAt, consentVersion and adultAttestedAt, so an invited user cannot skip the attestation",
+        "src/server/clubs/service.ts:153 — approval throws CONSENT_REQUIRED unless consentAt, adultAttestedAt and the current consentVersion are all present; therefore no membership can reach ACTIVE without this consent",
+        "src/app/club/[id]/page.tsx:17 — the workspace selects memberships where status is ACTIVE only",
+        "src/app/club/[id]/page.tsx:20 — name and email are rendered for each of those active members",
+        "src/app/club/[id]/page.tsx:21 — the skills block is separately and correctly gated on shareSkillsWithClubs",
+        "APPLICATION_CONTEXT.md:58 — 'Club coordinators see only an active member's opted-in skills/interests in their own club'",
+        "docs/security/permissions-matrix.md:7 — the same narrower claim"
+      ],
+      "reproduction": [
+        "Read src/lib/validations/club.ts:4 — the consent names the coordinator, the name and the email",
+        "Read src/server/clubs/service.ts:153 — approval is refused without a current-version consent",
+        "Read src/app/club/[id]/page.tsx:17 and :20 — only ACTIVE memberships are listed, and those are exactly the consented ones",
+        "Read APPLICATION_CONTEXT.md:58 and docs/security/permissions-matrix.md:7 — both describe a narrower view than the consent grants"
+      ],
+      "expected": "The privacy documents describe the disclosure the member actually consented to, so a reviewer can verify the boundary against the consent text rather than against a narrower summary",
+      "actual": "The code and the consent agree. Two internal documents understate the disclosure, which caused this to be filed as a Medium privacy defect whose stated remedy — restricting the roster to display names — would break the coordinator's membership-management workflow and contradict the consent the trust obtained",
+      "root_cause": "The privacy description was written around the skills opt-in feature and never updated to mention the roster that CLUB_CONSENT_TEXT already authorises. The documents and the consent text have no link between them",
+      "uncertainty": "One residual question, cheap to settle by reading: members whose rows predate the current CLUB_CONSENT_VERSION cannot be ACTIVE (service.ts:153 re-checks on approval), so no un-consented member can appear. If a future consent-version bump is ever applied without re-approval, that property must be re-verified",
+      "affected_modules": [
+        "Documentation",
+        "Club portal"
+      ],
+      "user_impact": "None. No member's data is disclosed outside the consent they gave. The cost is to reviewers, and the demonstrated cost of leaving it is a false privacy alarm with a harmful proposed remedy",
+      "recommendation": "Do not change src/app/club/[id]/page.tsx. Correct APPLICATION_CONTEXT.md:58 and docs/security/permissions-matrix.md:7 to read, in substance: a coordinator sees the active-member roster for their own club — account name and email, per the membership consent at src/lib/validations/club.ts:4 — plus the opted-in skills and interests of members who enabled shareSkillsWithClubs. Cite the consent constant from both documents so the next reviewer checks the right source. See also QA-ROOT-005",
+      "regression_coverage": [
+        "Proposed: assert the workspace query selects only ACTIVE memberships, so the consent gate at service.ts:153 remains the only route to disclosure",
+        "Proposed: assert CLUB_CONSENT_TEXT and the permissions matrix name the same fields"
+      ],
+      "confidence": "high",
+      "severity_revision": "Medium -> Low. Prior phase 5 called it Medium on the basis that the disclosure rests on 'a basis the trust cannot point to in writing'. That basis exists in writing, at src/lib/validations/club.ts:4, and is enforced at src/server/clubs/service.ts:153. Phase 5 read the two privacy documents and not the consent constant. Down-called, and re-stated as a documentation defect.",
+      "root_cause_group": "QA-ROOT-005"
+    },
+    {
+      "id": "QA-AUTH-002",
+      "module": "Authentication",
+      "feature": "Client IP resolution",
+      "finding": "getClientIp() trusts the first entry of X-Forwarded-For with no trusted-proxy policy. Re-assessed against the whole limiter inventory: only two of the application's eleven rate limiters are keyed on the IP at all, and both now have an IP-independent companion counter, so a forged header does not reach any authentication or authorization decision. The residual exposure is contact-form flooding by rotating the email address",
+      "severity": "Low",
+      "status": "CONFIRMED",
+      "evidence": [
+        "src/lib/rate-limit.ts:54 — const forwarded = h.get('x-forwarded-for'); if (forwarded) return forwarded.split(',')[0]!.trim()",
+        "src/auth.ts:35 — the login limiter key, the first of only two IP-keyed buckets",
+        "src/auth.ts:20 — LOGIN_ACCOUNT_RATE_LIMIT, 20 per hour, added by the QA-AUTH-001 fix this run",
+        "src/auth.ts:39 — the second, IP-independent login counter keyed on the email alone, which caps password spraying at 20/hour/account regardless of any forged header",
+        "src/server/actions/contact.ts:59 — contact:ip:<hash>, the second and last IP-keyed bucket",
+        "src/server/actions/contact.ts:60 — paired with contact:email:<hash>, which an attacker can evade only by rotating email addresses",
+        "src/app/api/admin/upload/route.ts:30 — upload:<user.id>: representative of the other nine limiters, all keyed on the authenticated actor id and therefore unaffected by the header",
+        "src/lib/env.ts:13 — STORAGE_DRIVER defaults to 'local', and src/lib/storage.ts:10 documents a local filesystem driver, so a self-hosted deployment without a header-normalizing proxy is a supported configuration and not a hypothetical one"
+      ],
+      "reproduction": [
+        "Grep src for rateLimit( and getClientIp — eleven call sites; nine key on the authenticated actor id, two on the client IP",
+        "Read src/auth.ts:35-41 and confirm the login path fails if either the IP-scoped or the account-scoped counter trips",
+        "Read src/server/actions/contact.ts:57-60 and confirm the same double-keying for the contact form",
+        "Read src/lib/env.ts:13 and confirm the storage driver default is local, so Vercel is not the only supported topology"
+      ],
+      "expected": "The IP used for rate limiting is supplied by a trusted proxy and cannot be set by the client, and the supported deployment topologies are written down so that assumption is checkable",
+      "actual": "The header is read directly with no trusted-proxy configuration. Because every limiter that protects a security decision is keyed on the account or the actor id, a forged header costs an attacker nothing and gains them nothing beyond contact-form volume",
+      "root_cause": "No trusted-proxy configuration or header allowlist, and no written statement of which topologies are supported — so the safety of reading the header cannot be verified by reading the repository",
+      "uncertainty": "The prior entry proposed forging the header against each deployed environment. That is the wrong and more expensive experiment: it needs a deployment and a database, and it answers only for the environments tried. The cheap decisive work is a repository-only question that has now been answered — eleven limiters enumerated, nine actor-keyed, two double-keyed — plus one decision that needs no experiment at all: write down the supported topologies. What remains genuinely unknown is only whether a self-hosted deployment exists, which the trust can answer in one sentence",
+      "affected_modules": [
+        "Authentication",
+        "Contact form"
+      ],
+      "user_impact": "No authentication or authorization consequence. An attacker who forges the header can send more contact messages than intended if they also rotate email addresses. The IP component of the login key is effectively decorative, which is worth knowing when reading the limiter code",
+      "recommendation": "Treat as hardening, not as a live weakness. Document the supported deployment topology in README.md; where the platform offers its own IP accessor, prefer it to parsing the header; if self-hosting is supported, read a fixed position from the right of the chain based on a configured proxy count. Do not spend a deployed-environment test on this",
+      "regression_coverage": [
+        "Proposed: a unit test over getClientIp() with a mocked headers() returning a multi-value chain, asserting which element is selected — no database required",
+        "Proposed: assert the login path still refuses after 20 account-scoped attempts when the IP-scoped key is rotated"
+      ],
+      "confidence": "high",
+      "severity_revision": "Medium -> Low, and SUSPECTED -> CONFIRMED. The code behaviour is certain by reading; what was uncertain was the consequence. Enumerating all eleven limiters shows the consequence is small, and the QA-AUTH-001 fix landed this run removed the worst of it. The prior entry's claim that 'every IP-scoped rate limit in the application can be bypassed' is literally true and materially misleading: there are two, and both are double-keyed.",
+      "root_cause_group": "standalone"
+    },
+    {
+      "id": "QA-FLOW-007",
+      "module": "Admin UI",
+      "feature": "Self-review controls",
+      "finding": "The admin review queues render the decision control for records belonging to the acting administrator, and the SELF_APPROVAL ban is enforced only server-side. Re-assessed: the affordance defect is provable by reading and needs no seeded experiment; the only thing a seeded run would add is whether the precondition occurs in practice, which is a question about deployments rather than about code",
+      "severity": "Low",
+      "status": "CONFIRMED",
+      "evidence": [
+        "src/app/admin/(dashboard)/volunteers/page.tsx:24 — the attendance queue selects every row with the chosen status, with no exclusion of the acting administrator's own profile",
+        "src/app/admin/(dashboard)/volunteers/page.tsx:33 — VolunteerReview is rendered for every row returned",
+        "src/components/admin/volunteer-review.tsx:10 — the component receives no actor id and therefore cannot disable itself",
+        "src/server/volunteers/service.ts:92 — the server ban on the attendance branch",
+        "src/server/volunteers/service.ts:106 — the same ban on the service-log branch",
+        "src/server/projects/service.ts:237 — reviewTaskCompletion throws SELF_APPROVAL when the actor is an assignee",
+        "src/server/actions/volunteer/records.ts:16 — a volunteer profile is created behind getAdminUser() with no role restriction, so an ADMIN can hold one",
+        "src/server/clubs/service.ts:129 — club membership is likewise role-agnostic"
+      ],
+      "reproduction": [
+        "Read src/app/admin/(dashboard)/volunteers/page.tsx:24 and confirm the query has no actor-based exclusion",
+        "Read src/components/admin/volunteer-review.tsx:10 and confirm the component has no actor prop, so no actor-aware disable is possible",
+        "Read src/server/actions/volunteer/records.ts:16 and src/server/clubs/service.ts:129 and confirm neither restricts the actor's Role",
+        "Conclude the control is rendered for the actor's own rows and that the server will always refuse it"
+      ],
+      "expected": "A control the server will always refuse is not rendered, or is rendered disabled with the reason — the convention the codebase already follows for the club contribution form",
+      "actual": "An administrator who also volunteers sees a working-looking Approve control on their own attendance and hours and is told 'You cannot review your own record.' only after submitting. The security property holds in all three places; only the affordance is wrong",
+      "root_cause": "The review queue was built as a status filter with no notion of the acting user, while the independence rule lives in the service layer — the QA-ROOT-008 pattern",
+      "uncertainty": "Reduced to a frequency question, which no experiment settles usefully: whether a given deployment has an ADMIN who also volunteers. For a small charity, where one person commonly administers and volunteers, the answer is plainly yes. The prior entry proposed seeding an ADMIN with a consented volunteer profile and an active membership, submitting attendance and opening the queue — four steps, a database and a browser, to confirm something two file reads already establish. Not worth running; the fix is smaller than the experiment",
+      "affected_modules": [
+        "Admin UI",
+        "Volunteer portal",
+        "Project operations"
+      ],
+      "user_impact": "Minor confusion in exactly the deployment shape this product targets. No authorization impact — the ban is correctly enforced server-side in all three places",
+      "recommendation": "Add the acting user's profile to the queue query's where clause at src/app/admin/(dashboard)/volunteers/page.tsx:24 so their own rows do not appear, or pass the actor id to VolunteerReview and render the control disabled with the reason. Keep the server bans exactly as they are; the UI change must never become the only guard. See QA-ROOT-008",
+      "regression_coverage": [
+        "Proposed: assert the queue renders no decision control for a record owned by the acting administrator",
+        "Proposed: assert the server still refuses the action if the control is forced"
+      ],
+      "confidence": "high",
+      "severity_revision": "Severity unchanged at Low — declining to inflate. SUSPECTED -> CONFIRMED: the affordance defect is established by reading two files, and the residual unknown is deployment population, not behaviour. Holding it as SUSPECTED pending a four-step seeded run was worth less than closing it as a confirmed Low with a one-line fix.",
+      "root_cause_group": "QA-ROOT-008"
+    },
+    {
+      "id": "QA-REQ-003",
+      "module": "Impact metrics",
+      "feature": "Year-on-year chart",
+      "finding": "Nothing constrains the unit of figures sharing one metricKey, and the year-on-year chart plots every period of a key on one axis without rendering the unit. Re-assessed: the dropped unit label is confirmed by reading and is a defect on its own; the two-units-under-one-key scenario remains unconfirmed, and the preventive fix costs less than the experiment that would justify it",
+      "severity": "Medium",
+      "status": "SUSPECTED",
+      "evidence": [
+        "src/lib/validations/admin.ts:190 — metricSchema accepts a free metricKey slug and free-text unitEn/unitTa with no cross-field rule",
+        "src/app/[locale]/impact/page.tsx:39 — series groups metrics by metricKey alone",
+        "src/app/[locale]/impact/page.tsx:88 — the BarChart receives value and a display string built from prefix/suffix; unit is not passed",
+        "src/components/impact/bar-chart.tsx:29 — bar lengths are scaled against the maximum value in the group",
+        "README.md:27 — 'Figures in different units are never added together'",
+        "prisma/schema.prisma:1510 — ImpactMetric.value, the field being charted (see QA-DATA-006 for its numeric type, a separate question)"
+      ],
+      "reproduction": [
+        "Read src/app/[locale]/impact/page.tsx:39 and confirm metricKey is the only grouping key",
+        "Read src/app/[locale]/impact/page.tsx:88 and src/components/impact/bar-chart.tsx:29 and confirm no unit reaches the chart and the scale is shared across the group",
+        "Read src/lib/validations/admin.ts:190 and confirm nothing prevents two published figures with one metricKey and different units"
+      ],
+      "expected": "Figures are compared on one scale only when they share a unit, and the unit is visible wherever the number is",
+      "actual": "Confirmed by reading: the chart renders no unit at all, on a transparency site. Unconfirmed: whether any real dataset has one metricKey carrying two units, which is what turns a missing label into a misleading trend",
+      "root_cause": "metricKey is the only grouping key; the unit is display metadata on the tile and is dropped on the chart path. No cross-field rule ties a key to a unit at write time",
+      "uncertainty": "The prior entry proposed seeding two figures with one key and different units and rendering /en/impact — a database, a seed and a render. Two cheaper routes exist. (1) The decisive read-only query against real data, one statement, no seeding: SELECT \"metricKey\", COUNT(DISTINCT \"unitEn\") FROM \"ImpactMetric\" WHERE status = 'PUBLISHED' GROUP BY 1 HAVING COUNT(DISTINCT \"unitEn\") > 1 — it answers both whether it happens and how often, which the seeded render cannot. (2) Cheaper still: add the unit-consistency refine to metricSchema, which makes the question moot. When the preventive fix is smaller than the experiment that would justify it, skip the experiment. No database was authorized for this run, so neither was executed",
+      "affected_modules": [
+        "Impact metrics",
+        "Public impact page"
+      ],
+      "user_impact": "A published figure on a transparency site is rendered with no unit today. If a key ever carries two units, the chart presents unlike quantities as a trend with no label that would let a reader notice",
+      "recommendation": "Do both halves, in this order. First, pass the unit through to the chart title and table header — this is the confirmed defect and it needs no decision. Second, add a refine to metricSchema rejecting a published figure whose unit differs from other published figures with the same metricKey, or group the series by metricKey plus unit. Run the one-statement query above first only if the refine would need a data migration",
+      "regression_coverage": [
+        "Proposed: a unit-consistency test over published metrics grouped by metricKey",
+        "Proposed: assert the chart renders the unit for a single-unit group (fails today)"
+      ],
+      "confidence": "medium",
+      "severity_revision": "Severity unchanged at Medium. Re-scoped: the confirmed half is the missing unit label, the speculative half is the multi-unit dataset. The cheapest settling experiment is a one-statement read-only query, not a seeded render — and the preventive fix is cheaper than either.",
+      "root_cause_group": "standalone"
+    },
+    {
+      "id": "QA-REQ-002",
+      "module": "Public site",
+      "feature": "Home hero status chips",
+      "finding": "The home hero shows the 'Registered trust' chip from a typed-in registration number alone, while the Evidence Center was deliberately changed to stop treating a bare registration number as inspectable evidence. The divergence is proven by reading; what is undecided is which rule is right, and that is a product decision with an owner, not an open question about behaviour",
+      "severity": "Medium",
+      "status": "CONFIRMED",
+      "evidence": [
+        "src/components/trust/hero.tsx:27 — if (trust.registration.number || trust.registration.document) items.push({ icon: BadgeCheck, label: t.hero.statusRegistered })",
+        "src/components/trust/hero.tsx:21 — the function's own doc comment states the rule it implements, so the behaviour is deliberate and documented locally, which is why this is a conflict of intents rather than an oversight",
+        "src/server/queries/public/evidence.ts:222 — registrationCount counts trust.registration.document only",
+        "APPLICATION_CONTEXT.md:107 — 'registration coverage does not treat a bare registration number as inspectable evidence'",
+        "README.md:19 — documents the current hero behaviour, contradicting the safeguard above"
+      ],
+      "reproduction": [
+        "Read src/components/trust/hero.tsx:21-27 — the comment and the condition agree with each other and disagree with APPLICATION_CONTEXT.md:107",
+        "Read src/server/queries/public/evidence.ts:222 — the same input produces an unticked registration area in the Evidence Center",
+        "Conclude that one data state (number set, document absent) produces a verification chip on the home page and no evidence coverage on the verification page"
+      ],
+      "expected": "One rule for a registration claim across the site: either both surfaces require an inspectable document, or both accept the number",
+      "actual": "Two rules on the same data. The most prominent claim on the site asserts registration from a number while the Evidence Center, reading the same profile, reports registration as undocumented",
+      "root_cause": "The November safeguard was applied to the evidence-coverage query only. The hero predates it, carries its own written rule in a code comment, and was not revisited — so neither author was wrong relative to what they could see",
+      "uncertainty": "Not an experiment. Whether the chip is a 'claim' subject to the safeguard is a product decision for the trust. The code behaviour needs no seeded run to establish: statusItems() at src/components/trust/hero.tsx:26 is a pure function of (t, trust, coverage), so if a definitive mechanical record is wanted it is a unit test over that function with a fixture profile — no database, milliseconds, and it doubles as the regression guard. That is strictly cheaper than the prior entry's proposal to seed a profile and compare two rendered pages",
+      "affected_modules": [
+        "Public site",
+        "Evidence Center",
+        "Trust identity"
+      ],
+      "user_impact": "A visitor reads 'Registered trust' with a verification badge on the landing page and finds no inspectable source behind it. Mitigating, and probably why the code does this: a registration number is independently checkable in a public register, so the claim is not baseless — only un-inspectable on this site",
+      "recommendation": "Decide the rule once, with QA-REQ-004 and QA-FLOW-010, under QA-ROOT-004. Recommended: keep the chip for the number-only case but relabel it 'Registration number recorded' and link it to the Evidence Center, so the claim matches the evidence. Then export statusItems() and lock the behaviour with a unit test either way",
+      "regression_coverage": [
+        "Proposed: unit test over statusItems() asserting which chip appears for {number set, document absent} and for {document set}"
+      ],
+      "confidence": "high",
+      "severity_revision": "Severity unchanged at Medium — declining to inflate, because a registration number is independently checkable even if not inspectable here. SUSPECTED -> CONFIRMED: the divergence is proven by reading two deterministic code paths over one input, which is the same standard that QA-REQ-004 was CONFIRMED on; holding it as SUSPECTED pending a seeded comparison was inconsistent with the rest of the set.",
+      "root_cause_group": "QA-ROOT-004"
+    },
+    {
+      "id": "QA-REQ-004",
+      "module": "Public site",
+      "feature": "Testimonial verification badge",
+      "finding": "A public badge reading 'Relationship confirmed by the trust' is driven by an unconstrained admin checkbox with no evidence, confirming person or date recorded — the only verification-flavoured public claim in the product with no supporting record",
+      "severity": "High",
+      "status": "CONFIRMED",
+      "evidence": [
+        "src/lib/validations/admin.ts:228 — relationshipVerified: checkbox, with no refine tying it to evidence",
+        "src/lib/view-models.ts:103 — verifiedLabel: item.relationshipVerified ? t.testimonials.relationshipConfirmed : null",
+        "src/components/interactive/testimonial-carousel.tsx:103 — renders the label with a BadgeCheck icon",
+        "src/lib/i18n/dictionaries/en.ts:298 — relationshipConfirmed: 'Relationship confirmed by the trust'",
+        "src/lib/validations/admin.ts:212 — the comparable claim, a published impact figure, does require a method or a source, so the rule exists in the same file for a weaker claim",
+        "scripts/audit-demo.ts:113 — the demo auditor asserts no demo testimonial is relationship-verified, which shows the flag is already understood internally as a verification claim",
+        "README.md:151 — demo data never contains verified testimonials"
+      ],
+      "reproduction": [
+        "Read src/lib/validations/admin.ts:219-238 and confirm no rule constrains relationshipVerified",
+        "Read src/lib/view-models.ts:103 and confirm the flag reaches the public DTO unconditionally",
+        "Read src/components/interactive/testimonial-carousel.tsx:103 and confirm it renders as a check-badge claim"
+      ],
+      "expected": "Consistent with README.md:3 and the honesty rules table at README.md:71-82, a public claim of confirmation is backed by a record: who confirmed it, when, and against what",
+      "actual": "A free checkbox renders a badge asserting the trust confirmed the person's relationship. No document, date or actor is stored, and the Evidence Center has no entry for it",
+      "root_cause": "The field was added for admin triage and later surfaced in the public carousel without acquiring an evidence rule — the QA-ROOT-004 pattern in its sharpest form",
+      "uncertainty": null,
+      "affected_modules": [
+        "Public site",
+        "Testimonials",
+        "Evidence Center"
+      ],
+      "user_impact": "The site makes a verification claim it cannot support, in the product's own verification vocabulary, on a surface a visitor is most likely to read as endorsement. This is the specific failure the product exists to avoid",
+      "recommendation": "Decide under QA-ROOT-004 and prefer the option that needs no new data model: drop the public badge and keep relationshipVerified as an internal triage marker. The alternative — requiring a verification record or document before the flag may be set on a published testimonial, as the metric and verification schemas already do — is also sound but larger. Either way the badge should not ship as it is",
+      "regression_coverage": [
+        "Proposed: assert a published testimonial cannot set relationshipVerified without a linked source, or that no public DTO carries verifiedLabel, depending on the decision"
+      ],
+      "confidence": "high",
+      "severity_revision": "Medium -> High. Up-called. The product's entire premise is that a public claim is backed by an inspectable record; this is the only verification-flavoured public claim with no record of any kind, the codebase's own demo auditor already treats the flag as a verification claim, and the adjacent schema in the same file enforces exactly this rule for a weaker claim. Not Critical: no data loss, no auth impact, and the claim is authored knowingly by a trust administrator.",
+      "root_cause_group": "QA-ROOT-004"
+    },
+    {
+      "id": "QA-FLOW-004",
+      "module": "Club portal",
+      "feature": "Membership lifecycle",
+      "finding": "ClubMembershipStatus.SUSPENDED is a dead end: closeClubMembership can enter it and no code path leaves it, while the admin UI offers it as a target. The member cannot be reinstated, cannot be ended, and cannot re-request membership. DRAFT is unreachable in the other direction",
+      "severity": "High",
+      "status": "CONFIRMED",
+      "evidence": [
+        "prisma/schema.prisma:202 — ClubMembershipStatus declares DRAFT, INVITED, REQUESTED, ACTIVE, REJECTED, SUSPENDED, ENDED",
+        "src/server/actions/admin/clubs.ts:112 — endMembership offers SUSPENDED and ENDED as targets",
+        "src/server/clubs/service.ts:194 — closeClubMembership is the only writer of SUSPENDED",
+        "src/server/clubs/service.ts:193 — and requires current.status === 'ACTIVE', so it cannot act on a suspended row",
+        "src/server/clubs/service.ts:150 — reviewClubMembership requires REQUESTED",
+        "src/server/clubs/service.ts:136 — requestClubMembership excludes SUSPENDED and throws MEMBERSHIP_EXISTS",
+        "src/server/clubs/service.ts:117 — inviteClubMember excludes SUSPENDED and throws MEMBERSHIP_EXISTS",
+        "src/server/clubs/service.ts:172 — appointClubCoordinator requires ACTIVE",
+        "src/server/clubs/service.ts:67 — the Club status machine, by contrast, has an explicit transition table and allows SUSPENDED to ACTIVE",
+        "src/server/clubs/service.ts:153 — any reinstatement must also decide what to do about the consent version, which approval re-checks",
+        "docs/implementation/roadmap.md:44 — the Phase 2 scope does not name suspension or reinstatement, so this is an implementation gap and not a documented deferral"
+      ],
+      "reproduction": [
+        "Read prisma/schema.prisma:202-210 and list the seven declared statuses",
+        "Grep src/server for every clubMembership create and update — DRAFT is never written",
+        "Check each of the four transition functions for a SUSPENDED precursor — none has one",
+        "Read src/server/actions/admin/clubs.ts:112 and confirm the admin UI nonetheless offers SUSPENDED"
+      ],
+      "expected": "Either SUSPENDED has a documented reinstatement path, by analogy with ClubStatus which does allow SUSPENDED to ACTIVE, or the status is not offered as a target in the admin UI",
+      "actual": "An administrator who suspends a membership has permanently removed that person from the club with no way back through the application. They cannot be reactivated, cannot be formally ended, and cannot re-apply. Their club-derived volunteer and project access is gone and the only remedy is direct SQL",
+      "root_cause": "The membership lifecycle has no transition table — each function hard-codes a single precursor status and none was written with SUSPENDED as its precursor — while the Club lifecycle in the same file does have one",
+      "uncertainty": "The dead end is certain. What reinstatement should restore (task assignments, attendance history, a fresh consent attestation at the current CLUB_CONSENT_VERSION) is undefined and must be decided, not tested",
+      "affected_modules": [
+        "Club portal",
+        "Admin — Clubs",
+        "Volunteer portal",
+        "Project operations"
+      ],
+      "user_impact": "An irreversible destructive action presented as a reversible-sounding one, on a live admin screen, with no warning and no in-application remedy. A member suspended by mistake loses the club, their future attendance and hours, and every project task derived from that membership",
+      "recommendation": "Two separate pieces of work; see QA-ROOT-007. Now, as a one-line defect fix: remove SUSPENDED from the endMembership target enum at src/server/actions/admin/clubs.ts:112 so the irreversible action cannot be taken. Later, as scoped feature work: define reinstatement semantics, add an explicit transition table to the membership service mirroring src/server/clubs/service.ts:67, add SUSPENDED to ACTIVE and SUSPENDED to ENDED with the same reason, version guard and history row as the other transitions, and only then re-offer the status. Also drop or document DRAFT",
+      "regression_coverage": [
+        "Proposed: assert every ClubMembershipStatus value has at least one writer and, unless terminal by design, at least one outbound transition",
+        "Proposed: assert a suspended membership can be reinstated and that reinstatement restores task and attendance access"
+      ],
+      "confidence": "high",
+      "severity_revision": "Medium -> High. Up-called. An administrator is offered an action whose label implies reversibility and whose effect is permanent removal, with no in-application remedy; the only recovery is hand-written SQL against production data. The rubric's High is 'a major workflow fails or a role boundary is weak, with a workaround' — raw SQL is barely a workaround. Not Critical: no data is lost or corrupted, and the action requires a deliberate admin decision.",
+      "root_cause_group": "QA-ROOT-007"
+    },
+    {
+      "id": "QA-FLOW-008",
+      "module": "Testing",
+      "feature": "Unit test suite targeting",
+      "finding": "Half the unit suite tests code with no consumer, and none of the six critical business workflows has any unit coverage. The gate that guards every commit executes no authorization guard, no self-approval ban, no consent-version check and no publication or deletion guard — including the eight fixes applied in this run, whose only verification was typecheck, lint and a production build",
+      "severity": "High",
+      "status": "CONFIRMED",
+      "evidence": [
+        "package.json:11 — test:unit runs exactly six files",
+        "package.json:12 — check = lint && typecheck && test:unit && build, so this is the gate",
+        "qa/reports/evidence/mechanical/test.log — the executed run, confirming which six files ran",
+        "src/lib/finance/chart.ts — no importer anywhere in src/ outside its own directory; src/lib/finance/journal-core.ts is the same",
+        "src/server/payments/provider.ts:17 — getLiveDonationProvider always throws; no importer outside its own test",
+        "src/server/actions/admin/media.ts:51 — findDeletionBlocker(), added this run, decides media deletion against thirteen relations with no test that executes it",
+        "src/auth.ts:39 — the second login limiter, added this run, with no test that executes it",
+        "src/app/api/club/documents/[id]/file/route.ts — the storage-prefix authorization check added this run, with no test that executes it",
+        "src/server/clubs/service.ts:153 — the consent-version gate on which the club privacy position rests, untested",
+        "src/server/volunteers/service.ts:92 and src/server/projects/service.ts:237 — two SELF_APPROVAL bans, untested",
+        "src/auth.ts:45 — the login failure path; note the prior entry cited src/auth.ts:24 and :31, line numbers that the QA-AUTH-001 fix has since shifted, which is itself a small demonstration of evidence decaying without executable tests"
+      ],
+      "reproduction": [
+        "Read package.json:11 and list the six files",
+        "For each of src/lib/finance/chart.ts, src/lib/finance/journal-core.ts and src/server/payments/provider.ts, grep src/ for an importer outside the module's own directory and its test — there is none",
+        "Grep for a test importing any of the five service modules or src/server/auth-guard.ts — there is none",
+        "Grep the repository for a test referencing /api/ — there is none"
+      ],
+      "expected": "The suite that gates every commit covers the business rules the product depends on, and in particular covers any guard a fix has just touched",
+      "actual": "The gate runs six files in under two seconds, three of them over modules nothing imports. Typecheck cannot detect a predicate with inverted logic, a wrong enum literal in a Prisma filter, or a check placed after the thing it protects — the exact class of mistake the eight landed fixes could contain",
+      "root_cause": "Test effort followed testability rather than risk: pure functions were easy to isolate and the finance and payments modules were written test-first ahead of their consumers, while the service layer needs a database and was left to manual verification scripts that are not in the gate",
+      "uncertainty": null,
+      "affected_modules": [
+        "Testing",
+        "Authentication",
+        "Club portal",
+        "Volunteer portal",
+        "Project operations",
+        "Donations",
+        "Media & evidence storage"
+      ],
+      "user_impact": "A regression that removes a self-approval ban, a consent-version check or a publication guard ships without any gate noticing. Today the sharper risk is the inverse: eight changes to authorization, deletion and rate-limiting code are in the tree with no behavioural evidence that any of them behaves as described",
+      "recommendation": "See QA-ROOT-009. Take the minimal slice first: on a disposable Postgres schema in CI, cover the three SELF_APPROVAL bans, the consent-version gate, findDeletionBlocker across its four branches, both login limiters, and the three-actor matrix on the four private-file routes. Add the existing npm run check:db to CI at the same time. Keep the finance and payments tests but mark those modules reserved, so their coverage is not read as workflow coverage",
+      "regression_coverage": [
+        "Proposed: add npm run check:db to CI, then service-level invariant tests on top"
+      ],
+      "confidence": "high",
+      "severity_revision": "Medium -> High. Up-called, and the trigger is new information the prior phase could not have: eight fixes to authorization, deletion and rate-limiting code landed during this run, verified only by typecheck, lint and a build. The gate cannot see a behavioural error in any of them. A missing test is normally Medium; a missing test over code that was changed yesterday, in the guards that protect private files and published content, is the active risk in this repository right now.",
+      "root_cause_group": "QA-ROOT-009"
+    },
+    {
+      "id": "QA-UI-001",
+      "module": "Admin UI",
+      "feature": "Review decision reason fields",
+      "finding": "Two admin review controls omit the required/minLength attributes that mirror the server's three-character minimum reason for non-approval decisions, while a near-identical control in the same file includes them",
+      "severity": "Low",
+      "status": "CONFIRMED",
+      "evidence": [
+        "src/components/admin/volunteer-review.tsx:10 — the reason input has no required or minLength, for REJECTED and VOIDED alike",
+        "src/server/volunteers/service.ts:86 — if (decision !== 'APPROVED' && reason.trim().length < 3) throw REASON_REQUIRED",
+        "src/components/admin/project-operations.tsx:60 — the 'Reason if returning' input has no required or minLength",
+        "src/server/projects/service.ts:233 — if (decision === 'RETURN' && reason.trim().length < 3) throw REASON_REQUIRED",
+        "src/components/admin/project-operations.tsx:60 — the adjacent administrative-status reason input in the same file does carry required minLength={3}"
+      ],
+      "reproduction": [
+        "Read src/components/admin/volunteer-review.tsx:10 and confirm no required or minLength",
+        "Read src/server/volunteers/service.ts:86 and confirm the server enforces the rule",
+        "Compare the two reason inputs in src/components/admin/project-operations.tsx:60"
+      ],
+      "expected": "A reviewer submitting REJECTED, VOIDED or RETURN with an empty or too-short reason is stopped inline, as the sibling forms do",
+      "actual": "The form submits, the server round-trips a validation error, and the reviewer learns the reason was too short after the request completes",
+      "root_cause": "The required/minLength mirror was applied inconsistently across admin review forms sharing one server rule — the QA-ROOT-001 pattern",
+      "uncertainty": null,
+      "affected_modules": [
+        "Volunteer portal",
+        "Project operations",
+        "Admin UI"
+      ],
+      "user_impact": "One avoidable round trip for a trust administrator. The server enforces the rule correctly, so there is no data-integrity consequence and no invalid record can be created",
+      "recommendation": "Add required minLength={3} to both inputs, matching the sibling forms. Better, under QA-ROOT-001: one ReasonInput component carrying the attributes, used by all of them, so the next review form inherits the mirror",
+      "regression_coverage": [
+        "Proposed: assert every reason input in an admin review form carries minLength 3"
+      ],
+      "confidence": "high",
+      "severity_revision": "Medium -> Low. Down-called as a prior-phase over-call. The entry's own user_impact says 'minor friction... no data-integrity consequence, since the server still enforces the rule correctly', which is the definition of Low in the schema, not Medium. Medium is 'a feature misbehaves in a non-blocking way'; here the feature behaves correctly and the inline hint is missing.",
+      "root_cause_group": "QA-ROOT-001"
+    },
+    {
+      "id": "QA-NOTIFY-007",
+      "module": "Notifications",
+      "feature": "NotificationOutbox delivery",
+      "finding": "NotificationOutbox rows are created by four services and never delivered. Re-assessed against docs/: the absence of delivery is explicitly and repeatedly documented as deferred feature work, which is the alternative the finding's own expected clause allows. What survives as a present defect is narrower — the table grows with no retention and nothing in the UI indicates that a recorded notification was never sent",
+      "severity": "Informational",
+      "status": "CONFIRMED",
+      "evidence": [
+        "docs/requirements/trustfolio-frd.md:46 — FR-NTF-01 'Send in-app/email notifications for invitations, assignments, decisions...' with its implementation status recorded as 'Contact email only.'",
+        "docs/implementation/roadmap.md:44 — 'In-app invitation and decision state is visible in the portal and notification outbox, while external delivery remains a later notifications phase.'",
+        "docs/implementation/roadmap.md:52 — 'external notifications... remain later work'",
+        "docs/implementation/roadmap.md:32 — 'notification delivery... outside this authorization and remain pending'",
+        "docs/testing/test.md:43 — T-NTF-01, the acceptance test for FR-NTF-01, recorded as NOT_RUN",
+        "docs/architecture/trustfolio-expansion.md:97 — the design for the eventual consumer: persisted recipient, template/locale, delivery state, retries and preference checks",
+        "src/app/admin/(dashboard)/approvals/page.tsx:20 — the only reader, a take: 10 display list",
+        "src/lib/email.ts:16 — the only delivery primitive, which fails soft when RESEND_API_KEY/EMAIL_FROM are unset"
+      ],
+      "reproduction": [
+        "Grep src/server for writes to NotificationOutbox — four service modules create rows",
+        "Grep for any update setting status to SENT or FAILED — there is none",
+        "Read docs/requirements/trustfolio-frd.md:46 and docs/implementation/roadmap.md:44 and :52 — the deferral is explicit in the requirement register, the roadmap and the test register"
+      ],
+      "expected": "A row written to an outbox is eventually delivered, or a documented decision records that delivery is not yet implemented — the finding's own words. The documented decision exists in four places",
+      "actual": "Delivery is absent and documented as absent. The residual defects are that the table has no retention policy and no consumer to bound it, and that nothing in the admin UI distinguishes a recorded notification from a sent one",
+      "root_cause": "Not a defect in the original sense: the outbox write side shipped with the feature and the delivery side is scheduled work under FR-NTF-01. Phase 6 searched APPLICATION_CONTEXT.md and README.md, where the deferral is not stated, and not docs/, where it is stated four times",
+      "uncertainty": null,
+      "affected_modules": [
+        "Notifications",
+        "Clubs",
+        "Volunteers",
+        "Projects",
+        "Approval engine"
+      ],
+      "user_impact": "No user is misled by the application, because nothing in it promises a notification. Users are nonetheless not notified, which is a real product limitation rather than a defect — and it is the reason QA-FLOW-003's cheap interim (pending counts on the admin dashboard) matters now rather than later",
+      "recommendation": "Reclassify as documented, scheduled feature work under FR-NTF-01 and stop carrying it as a Medium defect, which displaces real ones in a remediation plan. Two things remain worth doing before the consumer exists: add a retention or archival policy for NotificationOutbox so it does not grow unbounded while unconsumed, and reference FR-NTF-01 from APPLICATION_CONTEXT.md so the next reviewer finds the deferral where they look first. Keep the id alive — three phase reports cite it (see QA-ROOT-010)",
+      "regression_coverage": [
+        "Proposed: once a consumer exists, assert REQ-NOTIF-047 — a delivery failure never retries the business mutation",
+        "Proposed: assert the outbox table has a bounded retention path"
+      ],
+      "confidence": "high",
+      "severity_revision": "Medium -> Informational. Down-called. The finding's own acceptance criterion offered 'or a documented decision records that delivery is not yet implemented', and that decision is recorded in docs/requirements/trustfolio-frd.md:46, docs/implementation/roadmap.md:44 and :52, and docs/testing/test.md:43. This is feature work masquerading as a bug. QA-FLOW-003 is NOT covered by the same deferral and stays Medium: the deferral is about delivery, not about recording, and the rows that would be delivered are never written for submission events.",
+      "root_cause_group": "standalone (see QA-FLOW-003)"
+    },
+    {
+      "id": "QA-FLOW-003",
+      "module": "Notifications",
+      "feature": "Review workflow triggering",
+      "finding": "Three of the four submission events write no notification record of any kind, so a future delivery worker would close only half the loop. This is not covered by the documented deferral of notification delivery: the deferral concerns sending, and these rows are never written, so the gap survives the feature that is supposed to fix it",
+      "severity": "Medium",
+      "status": "CONFIRMED",
+      "evidence": [
+        "src/server/clubs/service.ts:141 — requestClubMembership's transaction ends with the AuditEvent; no notificationOutbox.create follows",
+        "src/server/clubs/service.ts:123 — by contrast inviteClubMember does write an outbox row",
+        "src/server/clubs/service.ts:161 — and reviewClubMembership writes one for the decision",
+        "src/server/volunteers/service.ts:66 — submitAttendance writes history and audit only",
+        "src/server/volunteers/service.ts:79 — submitServiceLog writes history and audit only",
+        "src/server/projects/service.ts:226 — updateMyTask, including the submit-for-review transition, writes history and audit only",
+        "docs/requirements/trustfolio-frd.md:46 — FR-NTF-01 covers delivery, not recording, so the deferral recorded there does not account for the missing rows",
+        "docs/architecture/trustfolio-expansion.md:97 — the eventual consumer is specified around a persisted recipient, which is precisely what a submission event does not have",
+        "src/app/admin/(dashboard)/approvals/page.tsx:20 — the only reader of the outbox anywhere, a take: 10 display list"
+      ],
+      "reproduction": [
+        "Grep src/server for notificationOutbox.create — every hit is a decision or invitation event; none is a submission event",
+        "Read src/server/clubs/service.ts:132-143, src/server/volunteers/service.ts:65-69 and :78-80, and src/server/projects/service.ts:224-227",
+        "Conclude that adding a delivery worker later would fix decision notifications and leave submission notifications missing, because the rows do not exist"
+      ],
+      "expected": "A submitted record either notifies its reviewer or appears in a queue the reviewer is directed to. At minimum the submission side records the same row the decision side does, so that one future worker closes both halves",
+      "actual": "A membership request, an attendance submission, an hours submission and a task completion are invisible until an administrator happens to open the relevant admin page. Nothing anywhere prompts the review",
+      "root_cause": "The outbox was introduced for decision events, where the recipient is a single user id, and never extended to submission events, where the recipient is a role. The schema has no role-targeted recipient, so the submission case had no natural shape and was skipped",
+      "uncertainty": null,
+      "affected_modules": [
+        "Notifications",
+        "Club portal",
+        "Volunteer portal",
+        "Project operations",
+        "Admin — Approvals"
+      ],
+      "user_impact": "Submitted work can sit unreviewed indefinitely with nothing prompting anyone. For a volunteer whose hours only count once approved, the delay is the whole user experience, and they have no way to tell whether anyone has seen the submission",
+      "recommendation": "Two steps, and the first is cheap enough to do now. Interim: surface the four pending counts on the admin dashboard beside the existing unread-messages tile — four count queries and a tile, no schema change, no notification system, and it removes the present-day user impact entirely. Durable: add a role-targeted recipient to the outbox and write a row on each of the four submission events, so the single future FR-NTF-01 worker closes both halves of the loop",
+      "regression_coverage": [
+        "Proposed: assert each of the four submission services writes exactly one PENDING notification record",
+        "Proposed: assert the admin dashboard pending counts match the queue row counts"
+      ],
+      "confidence": "high",
+      "severity_revision": "Severity unchanged at Medium, and deliberately not downgraded alongside QA-NOTIFY-007. The documented deferral covers delivery; it does not cover the absence of the record. This is the half of the notification gap that is a genuine design defect, and it is the half that would survive the feature intended to fix it.",
+      "root_cause_group": "standalone"
+    },
+    {
+      "id": "QA-DB-006",
+      "module": "Media library",
+      "feature": "Admin media list",
+      "finding": "The admin media library query hard-caps results at the 500 most recent rows with no pagination. The prior entry left open whether a client-side search mitigated this; it does not — the search exists and filters the same capped 500 in the browser, so an administrator searching for an older file is shown a confident empty result",
+      "severity": "Medium",
+      "status": "CONFIRMED",
+      "evidence": [
+        "src/server/queries/admin.ts:364 — listMedia() takes take: 500, orderBy createdAt desc, with no cursor or offset parameter",
+        "src/components/admin/media-library.tsx:135 — a search input labelled 'Search files…'",
+        "src/components/admin/media-library.tsx:36 — the search is a useMemo over the already-fetched items array",
+        "src/components/admin/media-library.tsx:38 — items.filter(...), so both the text query and the four type filters operate on the capped set only"
+      ],
+      "reproduction": [
+        "Read src/server/queries/admin.ts:364 — the take: 500 is unconditional and nothing can request older rows",
+        "Read src/components/admin/media-library.tsx:36-45 and :135 — the search narrows the fetched array; no second query exists"
+      ],
+      "expected": "The admin media library can reach every uploaded file, or is explicitly paginated and server-searchable so older files remain reachable",
+      "actual": "Beyond 500 uploads, every older file becomes unreachable from this list: it cannot be selected for new content, re-captioned or deleted through the admin UI, though it keeps rendering wherever it is already linked because public queries read Media by id. The search box makes this worse than a bare cap would, because it returns an authoritative-looking 'no results' for a file that exists",
+      "root_cause": "A fixed take was used as a safety bound without pagination, and the search was added client-side over the bounded set rather than pushed into the query — the QA-ROOT-003 pattern",
+      "uncertainty": null,
+      "affected_modules": [
+        "Admin — Media"
+      ],
+      "user_impact": "A transparency site accumulating event photos and documents over several years will exceed 500 media rows and silently lose admin access to the older ones, with a search box that denies they exist",
+      "recommendation": "Add a cursor or offset parameter to listMedia() and move the text query and type filters server-side, keeping the client filter only as a narrowing convenience over the current page. See QA-ROOT-003",
+      "regression_coverage": [
+        "Proposed: seed 501 media rows and assert the 501st is reachable through some admin path",
+        "Proposed: assert a search for a filename outside the first page returns it"
+      ],
+      "confidence": "high",
+      "severity_revision": "Severity unchanged at Medium; confidence medium -> high and uncertainty resolved. The prior entry's open question ('whether the admin UI has its own client-side search — if a separate query exists, this is less severe') is answered by two file reads, and it resolves against the mitigation: the search is client-side over the capped set, which aggravates rather than relieves the defect. Not up-called, because nothing is lost and the files still render publicly.",
+      "root_cause_group": "QA-ROOT-003"
+    },
+    {
+      "id": "QA-DB-005",
+      "module": "Schema",
+      "feature": "Foreign-key indexing",
+      "finding": "Several foreign-key columns have no supporting index. One of the three priority columns changed status during this run: the media-deletion guard landed for QA-DB-001/QA-FLOW-002 now runs two GalleryImage counts filtered on mediaId on every media deletion, against a table whose only index leads with albumId — so a latent index gap is now on the hot path of a shipped guard",
+      "severity": "Medium",
+      "status": "CONFIRMED",
+      "evidence": [
+        "src/server/actions/admin/media.ts:64 — const galleryUses = await db.galleryImage.count({ where: { mediaId } }), added this run",
+        "src/server/actions/admin/media.ts:66 — a second galleryImage.count filtered on mediaId and the album's status",
+        "prisma/schema.prisma:1820 — @@unique([albumId, mediaId]): mediaId is the non-leading member, so it cannot serve these queries",
+        "prisma/schema.prisma:1821 — @@index([albumId, sortOrder]), the only other index on the table",
+        "prisma/schema.prisma:1818 — GalleryImage.media is the one onDelete: Cascade relation in the schema, so Postgres must also scan this table for every Media delete",
+        "prisma/schema.prisma:706 — ActivityLog indexes createdAt and (entity, entityId) but not userId",
+        "prisma/schema.prisma:798 — Media indexes (visibility, createdAt) and mimeType but not uploadedById",
+        "prisma/schema.prisma:1203 — ProjectTask indexes (projectId, status, dueDate) and others but not milestoneId",
+        "qa/reports/findings.json — QA-DB-005 lists roughly twenty further unindexed FK columns on editor-bounded content tables, all lower impact"
+      ],
+      "reproduction": [
+        "Read src/server/actions/admin/media.ts:64-70 and note two counts filtered on mediaId",
+        "Read prisma/schema.prisma:1811-1822 and confirm no index leads with mediaId",
+        "For ActivityLog and Media, list every scalar named in a @relation(fields:[...]) clause and confirm it leads no index"
+      ],
+      "expected": "Every foreign-key column that is queried by itself, or that a cascade delete must scan, has a supporting index — and certainly any column a newly added guard queries on every invocation",
+      "actual": "GalleryImage.mediaId, ActivityLog.userId and Media.uploadedById have no usable index. The first is now queried twice per media deletion by code added this run, in addition to the cascade scan Postgres already performs",
+      "root_cause": "Indexes were added for the query patterns the editors needed and not systematically for every FK; Prisma and Postgres add none automatically. The new guard introduced a query pattern without checking for its index",
+      "uncertainty": "Absolute cost is reasoned from query shape and write frequency, not measured — no database was authorized for this run. The ordering of the three priority columns is not in doubt",
+      "affected_modules": [
+        "Gallery",
+        "Media library",
+        "Activity log",
+        "Project tasks"
+      ],
+      "user_impact": "Today, small. As galleries and the activity log grow, every media deletion performs repeated sequential scans of GalleryImage and the activity log degrades on any per-user query. The media-delete path is the one an administrator uses while tidying the library, so it is the one they will notice",
+      "recommendation": "One migration, three lines: @@index([mediaId]) on GalleryImage, @@index([userId]) on ActivityLog, @@index([uploadedById]) on Media. Add the remaining FK indexes opportunistically when touching those models. Adopt the rule that a new query pattern is checked against the model's indexes in the same change — this one was not",
+      "regression_coverage": [
+        "Proposed: assert every scalar named in a @relation(fields:[...]) clause either leads an index or is listed as deliberately unindexed"
+      ],
+      "confidence": "high",
+      "severity_revision": "Severity unchanged at Medium, priority raised within its group. The GalleryImage.mediaId item moved from latent to hot-path because of a fix that landed during this run, which the prior phase could not have known. The remedy is a three-line migration with essentially no regression risk, which is why it ranks fourth on risk reduction per effort despite a Medium severity.",
+      "root_cause_group": "standalone"
+    },
+    {
+      "id": "QA-AUTH-004",
+      "module": "Authentication",
+      "feature": "Login feedback",
+      "finding": "A rate-limited login returns the same null result as an invalid password, so a locked-out user receives 'invalid credentials' with no indication they must wait. Evidence line numbers re-verified: the QA-AUTH-001 fix shifted them, and the condition now covers two limiters",
+      "severity": "Low",
+      "status": "CONFIRMED",
+      "evidence": [
+        "src/auth.ts:41 — if (!limit.success || !accountLimit.success) return null; (was :31 before the QA-AUTH-001 fix)",
+        "src/auth.ts:45 — if (!user || !valid) return null; (was :35)",
+        "src/auth.ts:20 — LOGIN_ACCOUNT_RATE_LIMIT, 20 per hour, which a legitimate user on a changing network can now also trip, so the missing feedback has one more way to be reached than when this was filed",
+        "src/lib/rate-limit.ts:41 — resetAt is already returned by rateLimit(), so the information needed for the message exists"
+      ],
+      "reproduction": [
+        "Submit six failed logins for the same account from one address within fifteen minutes",
+        "Observe that the sixth response is indistinguishable from the fifth",
+        "Read src/auth.ts:41 and :45 and confirm both paths return the same null"
+      ],
+      "expected": "The user learns that further attempts are temporarily blocked, with the reset time",
+      "actual": "An identical generic failure. A legitimate user who mistypes repeatedly believes their password is wrong and may reset it unnecessarily",
+      "root_cause": "Both limiter results are collapsed into the same null return as an authentication failure — the QA-ROOT-008 pattern, where the server knows something the UI cannot express",
+      "uncertainty": null,
+      "affected_modules": [
+        "Authentication",
+        "Admin login UI"
+      ],
+      "user_impact": "Avoidable support load and unnecessary password resets, with no security benefit: the lockout is already observable by timing, and the account-scoped limiter means a user on a changing network can reach it without any attacker involved",
+      "recommendation": "Surface a distinct, non-enumerating message such as 'Too many attempts. Try again after HH:MM.' The resetAt value is already returned by rateLimit() at src/lib/rate-limit.ts:41. Use the later of the two limiters' reset times",
+      "regression_coverage": [
+        "Proposed: assert the sixth attempt returns the throttled message and the twenty-first account-scoped attempt does too"
+      ],
+      "confidence": "high",
+      "severity_revision": "Severity unchanged at Low. Re-issued only to correct evidence line numbers that the QA-AUTH-001 fix invalidated (:31 and :35 are now :41 and :45) and to note that the new account-scoped limiter gives a legitimate user a second route into the unexplained lockout.",
+      "root_cause_group": "QA-ROOT-008"
+    }
+  ],
+  "tests": [
+    {
+      "test_id": "TC-BUG-001",
+      "workflow": "workflow.admin.delete",
+      "type": "integration",
+      "status": "PROPOSED",
+      "reason": "Provoke a P2003 through adminMutation (delete a user holding one ClubMembership) and assert a specific, non-generic message. Guards the rank-1 fix proposal. Needs a disposable Postgres schema, which was not authorized for this run",
+      "environment": "none"
+    },
+    {
+      "test_id": "TC-BUG-002",
+      "workflow": "workflow.public.claims",
+      "type": "unit",
+      "status": "PROPOSED",
+      "reason": "Export statusItems() from src/components/trust/hero.tsx and assert which chip appears for {registration.number set, document absent}. Settles QA-REQ-002's code behaviour with no database — strictly cheaper than the seeded two-page comparison the prior entry proposed",
+      "environment": "local"
+    },
+    {
+      "test_id": "TC-BUG-003",
+      "workflow": "workflow.media.publish",
+      "type": "integration",
+      "status": "PROPOSED",
+      "reason": "One case per findDeletionBlocker branch (Restrict evidence, Cascade gallery, published SetNull, clean delete). Puts the largest fix landed this run under the gate. Needs a database",
+      "environment": "none"
+    },
+    {
+      "test_id": "TC-BUG-004",
+      "workflow": "workflow.admin.login",
+      "type": "unit",
+      "status": "PROPOSED",
+      "reason": "getClientIp() over a mocked headers() returning a multi-value X-Forwarded-For chain, asserting which element is selected. Settles QA-AUTH-002's parsing behaviour with no database and no deployed environment",
+      "environment": "local"
+    },
+    {
+      "test_id": "TC-BUG-005",
+      "workflow": "workflow.club.membership",
+      "type": "unit",
+      "status": "PROPOSED",
+      "reason": "Assert every ClubMembershipStatus and NotificationStatus member has a writer in src/, with an explicit reserved allowlist. Guards QA-ROOT-006 and the DRAFT half of QA-FLOW-004; a source-scan test, no database required",
+      "environment": "local"
+    }
+  ],
+  "generatedAt": "2026-11-16T00:00:00.000Z",
+  "commit": null
+}

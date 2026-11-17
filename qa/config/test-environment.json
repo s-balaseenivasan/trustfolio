@@ -1,0 +1,192 @@
+{
+  "generatedAt": "2026-11-16T13:00:37.150Z",
+  "root": "C:\\Users\\balas\\Desktop\\Project\\trustfolio",
+  "mode": "TEARDOWN",
+  "services": [
+    {
+      "name": "postgres",
+      "image": "postgres:18",
+      "env": {
+        "POSTGRES_USER": "trustfolio",
+        "POSTGRES_PASSWORD": "trustfolio_test",
+        "POSTGRES_DB": "trustfolio_test"
+      },
+      "ports": [
+        "5432:5432"
+      ],
+      "source": ".github\\workflows\\check.yml"
+    }
+  ],
+  "envVars": [
+    {
+      "name": "DATABASE_URL",
+      "value": "postgresql://<redacted>@127.0.0.1:5432/trustfolio_test",
+      "source": ".github\\workflows\\check.yml"
+    },
+    {
+      "name": "AUTH_SECRET",
+      "value": "<redacted by name — read it from the source file>",
+      "source": ".github\\workflows\\check.yml"
+    },
+    {
+      "name": "NEXT_TELEMETRY_DISABLED",
+      "value": "1",
+      "source": ".github\\workflows\\check.yml"
+    },
+    {
+      "name": "AUTH_TRUST_HOST",
+      "value": null,
+      "source": ".env.example",
+      "note": "name only — value not read"
+    },
+    {
+      "name": "ADMIN_EMAIL",
+      "value": null,
+      "source": ".env.example",
+      "note": "name only — value not read"
+    },
+    {
+      "name": "ADMIN_PASSWORD",
+      "value": null,
+      "source": ".env.example",
+      "note": "name only — value not read"
+    },
+    {
+      "name": "ADMIN_NAME",
+      "value": null,
+      "source": ".env.example",
+      "note": "name only — value not read"
+    },
+    {
+      "name": "ADMIN_RESET_PASSWORD",
+      "value": null,
+      "source": ".env.example",
+      "note": "name only — value not read"
+    },
+    {
+      "name": "SEED_DEMO",
+      "value": null,
+      "source": ".env.example",
+      "note": "name only — value not read"
+    },
+    {
+      "name": "NEXT_PUBLIC_SITE_URL",
+      "value": null,
+      "source": ".env.example",
+      "note": "name only — value not read"
+    },
+    {
+      "name": "STORAGE_DRIVER",
+      "value": null,
+      "source": ".env.example",
+      "note": "name only — value not read"
+    },
+    {
+      "name": "BLOB_READ_WRITE_TOKEN",
+      "value": null,
+      "source": ".env.example",
+      "note": "name only — value not read"
+    },
+    {
+      "name": "UPLOAD_MAX_MB",
+      "value": null,
+      "source": ".env.example",
+      "note": "name only — value not read"
+    },
+    {
+      "name": "RESEND_API_KEY",
+      "value": null,
+      "source": ".env.example",
+      "note": "name only — value not read"
+    },
+    {
+      "name": "EMAIL_FROM",
+      "value": null,
+      "source": ".env.example",
+      "note": "name only — value not read"
+    },
+    {
+      "name": "CONTACT_NOTIFY_EMAIL",
+      "value": null,
+      "source": ".env.example",
+      "note": "name only — value not read"
+    }
+  ],
+  "commands": {
+    "migrate": [
+      "npm run db:migrate",
+      "npm run db:deploy"
+    ],
+    "seed": [
+      "npm run db:seed",
+      "npm run db:seed:demo"
+    ],
+    "test": [
+      "npm run check",
+      "npm run check:db",
+      "npm run test:approval:db",
+      "npm run test:club:db",
+      "npm run test:volunteer:db",
+      "npm run test:project:db",
+      "npm run test:donations:db",
+      "npm run test:fundraising:db"
+    ]
+  },
+  "sources": [
+    {
+      "path": ".github\\workflows\\check.yml",
+      "kind": "ci"
+    },
+    {
+      "path": ".env.example",
+      "kind": "env-contract"
+    }
+  ],
+  "actions": [
+    {
+      "id": "service:postgres",
+      "description": "Start postgres (postgres:18) as defined in .github\\workflows\\check.yml",
+      "command": "docker run -d --name qa-postgres -p 5432:5432 -e POSTGRES_USER=trustfolio -e POSTGRES_PASSWORD=trustfolio_test -e POSTGRES_DB=trustfolio_test postgres:18",
+      "teardown": "docker rm -f qa-postgres",
+      "writes": true
+    },
+    {
+      "id": "migrate",
+      "description": "Apply migrations to the TEST database",
+      "command": "npm run db:migrate",
+      "writes": true,
+      "gated": true
+    },
+    {
+      "id": "migrate",
+      "description": "Apply migrations to the TEST database",
+      "command": "npm run db:deploy",
+      "writes": true,
+      "gated": true
+    },
+    {
+      "id": "seed",
+      "description": "Seed test data",
+      "command": "npm run db:seed",
+      "writes": true,
+      "gated": true
+    },
+    {
+      "id": "seed",
+      "description": "Seed test data",
+      "command": "npm run db:seed:demo",
+      "writes": true,
+      "gated": true
+    }
+  ],
+  "warnings": [],
+  "notes": [],
+  "teardown": [
+    {
+      "command": "docker rm -f qa-postgres",
+      "label": "remove qa-postgres",
+      "ok": true,
+      "exit_code": 0
+    }
+  ]
+}

@@ -1,0 +1,1048 @@
+{
+  "generatedAt": "2026-11-16T11:02:38.123Z",
+  "phase": "requirements-analysis",
+  "environment": "local, static analysis only - no application or database started, no test executed",
+  "sources": [
+    "README.md",
+    "APPLICATION_CONTEXT.md",
+    "AGENTS.md",
+    "docs/architecture/trustfolio-expansion.md",
+    "docs/security/permissions-matrix.md",
+    "docs/requirements/trustfolio-frd.md",
+    "docs/requirements/trustfolio-srs.md",
+    "docs/design/trustfolio-uird.md",
+    "docs/testing/test.md",
+    "docs/implementation/roadmap.md",
+    "docs/workflows/approval-workflows.md",
+    "docs/database/trustfolio-erd.md",
+    "docs/finance/accounting-rules.md",
+    "docs/finance/phase7-ledger-design.md",
+    "docs/operations/release.md"
+  ],
+  "candidates": {
+    "extracted": 120,
+    "promoted": 47,
+    "discardedReason": "build/tooling statements, Phase 7 finance design gated behind D-01..D-06, mis-extracted table headers"
+  },
+  "counts": {
+    "total": 47,
+    "byVerdict": {
+      "SATISFIED": 38,
+      "PARTIAL": 5,
+      "VIOLATED": 2,
+      "UNIMPLEMENTED": 1,
+      "UNVERIFIABLE": 1
+    },
+    "tracedToCode": 46,
+    "tracedToTest": 15
+  },
+  "staleDocuments": [
+    {
+      "ref": "APPLICATION_CONTEXT.md:109-117",
+      "reason": "Presents three gaps as current behaviour; all three re-verified closed",
+      "finding": "QA-REQ-001"
+    },
+    {
+      "ref": "README.md:113",
+      "reason": "Claims every route calls requireAdmin(); portal routes use getAdminUser() plus scope checks",
+      "finding": "QA-REQ-005"
+    },
+    {
+      "ref": "docs/finance/*",
+      "reason": "Phase 7 ledger design, not a requirement of this build"
+    },
+    {
+      "ref": "docs/design/trustfolio-uird.md",
+      "reason": "Largely unverifiable as written; screens do not exist yet"
+    }
+  ],
+  "undocumentedBehaviour": [
+    {
+      "behaviour": "Club coordinator workspace lists every active member name and email",
+      "evidence": "src/app/club/[id]/page.tsx:20",
+      "finding": "QA-REQ-006"
+    },
+    {
+      "behaviour": "robots.txt excludes only /admin and /api/; portals rely on noindex metadata",
+      "evidence": "src/app/robots.ts:6"
+    },
+    {
+      "behaviour": "Club, volunteer and donor portals are English-only in a bilingual application",
+      "evidence": "src/app/club/page.tsx:11"
+    },
+    {
+      "behaviour": "createUser returns a one-time temporary password in the action result message",
+      "evidence": "src/server/actions/admin/settings.ts:97"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "REQ-DOC-001",
+      "statement": "A document that contains personal data may be PUBLIC+PUBLISHED only if isRedacted is set; otherwise it must stay private",
+      "type": "prohibition",
+      "source": [
+        "README.md:76",
+        "APPLICATION_CONTEXT.md:86"
+      ],
+      "module": "Documents & privacy",
+      "actor": null,
+      "implemented_by": [
+        "src/lib/validations/admin.ts:285",
+        "src/server/actions/admin/bulk.ts:49",
+        "src/server/queries/public/shared.ts:102"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-DOC-002",
+      "statement": "Unredacted originals are stored as PRIVATE media and served only through an authenticated admin route",
+      "type": "prohibition",
+      "source": [
+        "README.md:77",
+        "APPLICATION_CONTEXT.md:87"
+      ],
+      "module": "Documents & privacy",
+      "actor": null,
+      "implemented_by": [
+        "src/lib/storage.ts:78",
+        "src/app/api/admin/media/[id]/file/route.ts:13"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-DOC-003",
+      "statement": "The public-file slot must hold PUBLIC media and the original slot PRIVATE media",
+      "type": "invariant",
+      "source": [
+        "APPLICATION_CONTEXT.md:87",
+        "README.md:231"
+      ],
+      "module": "Documents & privacy",
+      "actor": null,
+      "implemented_by": [
+        "src/server/actions/admin/evidence.ts:23, :26"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-DOC-004",
+      "statement": "A published public document must have a public media file",
+      "type": "obligation",
+      "source": [
+        "APPLICATION_CONTEXT.md:107"
+      ],
+      "module": "Documents & privacy",
+      "actor": null,
+      "implemented_by": [
+        "src/lib/validations/admin.ts:289",
+        "src/server/actions/admin/bulk.ts:50",
+        "src/server/queries/public/shared.ts:101"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-DOC-005",
+      "statement": "Media deletion must be rejected while the file is used by a published public document",
+      "type": "prohibition",
+      "source": [
+        "APPLICATION_CONTEXT.md:107",
+        "docs/requirements/trustfolio-srs.md:64"
+      ],
+      "module": "Documents & privacy",
+      "actor": null,
+      "implemented_by": [
+        "src/server/actions/admin/media.ts:51"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-DOC-006",
+      "statement": "Private media never reaches a public DTO, even when linked by mistake",
+      "type": "prohibition",
+      "source": [
+        "APPLICATION_CONTEXT.md:87"
+      ],
+      "module": "Documents & privacy",
+      "actor": null,
+      "implemented_by": [
+        "src/server/queries/public/shared.ts:40, :122"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-MEDIA-007",
+      "statement": "Operational private namespaces (club, task, fundraising, donation) are excluded from legacy editor media lists, file reads, metadata edits and document-original linking",
+      "type": "prohibition",
+      "source": [
+        "APPLICATION_CONTEXT.md:87",
+        "docs/security/permissions-matrix.md:5"
+      ],
+      "module": "Media library",
+      "actor": "ADMIN, EDITOR",
+      "implemented_by": [
+        "src/server/queries/admin.ts:366",
+        "src/app/api/admin/media/route.ts:23",
+        "src/app/api/admin/media/[id]/file/route.ts:19",
+        "src/server/actions/admin/media.ts:35",
+        "src/server/actions/admin/evidence.ts:29"
+      ],
+      "implementation_note": null,
+      "tested_by": [
+        "scripts/verify-club-ui.ts:129"
+      ],
+      "test_status": "COVERED-NOT-EXECUTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-CON-008",
+      "statement": "A trustee profile cannot be published without recorded consent (form, bulk and every public read)",
+      "type": "prohibition",
+      "source": [
+        "README.md:75",
+        "APPLICATION_CONTEXT.md:85"
+      ],
+      "module": "Consent",
+      "actor": null,
+      "implemented_by": [
+        "src/lib/validations/admin.ts:98",
+        "src/server/actions/admin/bulk.ts:44",
+        "src/server/queries/public/trust.ts:201",
+        "src/server/queries/public/search.ts:74"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-CON-009",
+      "statement": "A testimonial cannot be published without recorded consent",
+      "type": "prohibition",
+      "source": [
+        "README.md:75",
+        "APPLICATION_CONTEXT.md:85"
+      ],
+      "module": "Consent",
+      "actor": null,
+      "implemented_by": [
+        "src/lib/validations/admin.ts:235",
+        "src/server/actions/admin/bulk.ts:45",
+        "src/server/queries/public/trust.ts:311"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-CON-010",
+      "statement": "A story cannot be published without recorded consent",
+      "type": "prohibition",
+      "source": [
+        "README.md:75",
+        "APPLICATION_CONTEXT.md:85"
+      ],
+      "module": "Consent",
+      "actor": null,
+      "implemented_by": [
+        "src/lib/validations/admin.ts:258",
+        "src/server/actions/admin/bulk.ts:46",
+        "src/server/queries/public/work.ts:143",
+        "src/server/queries/public/search.ts:88"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-MET-011",
+      "statement": "A published impact figure must have a method, a source document or an annual report",
+      "type": "obligation",
+      "source": [
+        "README.md:78",
+        "APPLICATION_CONTEXT.md:88"
+      ],
+      "module": "Impact metrics",
+      "actor": null,
+      "implemented_by": [
+        "src/lib/validations/admin.ts:212",
+        "src/server/actions/admin/bulk.ts:53"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-MET-012",
+      "statement": "Figures in different units are never added together",
+      "type": "prohibition",
+      "source": [
+        "README.md:27"
+      ],
+      "module": "Impact metrics",
+      "actor": null,
+      "implemented_by": [
+        "no summation exists",
+        "src/app/[locale]/impact/page.tsx:39 groups by metricKey only"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "PARTIAL",
+      "findings": [
+        "QA-REQ-003"
+      ]
+    },
+    {
+      "id": "REQ-MET-013",
+      "statement": "Every published figure shows its period, how it was counted and its source",
+      "type": "obligation",
+      "source": [
+        "README.md:25",
+        "APPLICATION_CONTEXT.md:88"
+      ],
+      "module": "Impact metrics",
+      "actor": null,
+      "implemented_by": [
+        "src/lib/view-models.ts:27",
+        "src/components/impact/metric-tiles.tsx:55",
+        "src/app/[locale]/impact/page.tsx:120"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-VER-014",
+      "statement": "A published verification record must point to a document or an external registry/issuer link",
+      "type": "obligation",
+      "source": [
+        "README.md:79"
+      ],
+      "module": "Verification records",
+      "actor": null,
+      "implemented_by": [
+        "src/lib/validations/admin.ts:344, :348"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-VER-015",
+      "statement": "A verification record's document source counts only when that document is itself public, published and has a public file",
+      "type": "obligation",
+      "source": [
+        "APPLICATION_CONTEXT.md:89"
+      ],
+      "module": "Verification records",
+      "actor": null,
+      "implemented_by": [
+        "src/server/actions/admin/evidence.ts:80",
+        "src/server/actions/admin/bulk.ts:54",
+        "src/server/queries/public/shared.ts:105"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-VER-016",
+      "statement": "A bare registration number is not inspectable evidence of registration",
+      "type": "prohibition",
+      "source": [
+        "APPLICATION_CONTEXT.md:107"
+      ],
+      "module": "Verification records",
+      "actor": null,
+      "implemented_by": [
+        "coverage src/server/queries/public/evidence.ts:222",
+        "hero chip src/components/trust/hero.tsx:26"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "PARTIAL",
+      "findings": [
+        "QA-REQ-002"
+      ]
+    },
+    {
+      "id": "REQ-EVC-017",
+      "statement": "There is no trust score: an evidence area is ticked only when published records exist",
+      "type": "invariant",
+      "source": [
+        "README.md:29",
+        "APPLICATION_CONTEXT.md:81"
+      ],
+      "module": "Evidence Center",
+      "actor": null,
+      "implemented_by": [
+        "src/server/queries/public/evidence.ts:204"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-PUB-018",
+      "statement": "Placeholder text is treated as missing and left out of structured data",
+      "type": "obligation",
+      "source": [
+        "README.md:80",
+        "APPLICATION_CONTEXT.md:90"
+      ],
+      "module": "Public site",
+      "actor": null,
+      "implemented_by": [
+        "src/server/queries/public/trust.ts:31",
+        "src/lib/seo.ts:107"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-DEMO-019",
+      "statement": "While any published demo record is visible: banner, noindex, and no Organization structured data",
+      "type": "obligation",
+      "source": [
+        "README.md:160",
+        "APPLICATION_CONTEXT.md:107"
+      ],
+      "module": "Demo data",
+      "actor": null,
+      "implemented_by": [
+        "src/server/queries/public/trust.ts:331",
+        "src/app/[locale]/page.tsx:52",
+        "src/app/[locale]/layout.tsx:37"
+      ],
+      "implementation_note": null,
+      "tested_by": [
+        "scripts/audit-demo.ts:113"
+      ],
+      "test_status": "COVERED-NOT-EXECUTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-PUB-020",
+      "statement": "No public UI element asserts verification that published records do not support",
+      "type": "prohibition",
+      "source": [
+        "README.md:3",
+        "APPLICATION_CONTEXT.md:88"
+      ],
+      "module": "Public site",
+      "actor": null,
+      "implemented_by": [
+        "mostly enforced",
+        "src/lib/view-models.ts:103 and src/components/interactive/testimonial-carousel.tsx:103 publish a \"Relationship confirmed by the trust\" badge from an unconstrained checkbox"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "VIOLATED",
+      "findings": [
+        "QA-REQ-004"
+      ]
+    },
+    {
+      "id": "REQ-PUB-021",
+      "statement": "No public query returns private club, volunteer, task or donation data; the public project read is a field allowlist",
+      "type": "prohibition",
+      "source": [
+        "docs/requirements/trustfolio-frd.md:44",
+        "APPLICATION_CONTEXT.md:60"
+      ],
+      "module": "Public site",
+      "actor": null,
+      "implemented_by": [
+        "src/server/queries/public/work.ts:255",
+        "no club/volunteer/donation model is referenced under src/server/queries/public/"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-I18N-022",
+      "statement": "Tamil is never generated automatically; untranslated text falls back to English with a lang attribute and a visible note",
+      "type": "prohibition",
+      "source": [
+        "README.md:81",
+        "APPLICATION_CONTEXT.md:9"
+      ],
+      "module": "Internationalization",
+      "actor": null,
+      "implemented_by": [
+        "src/lib/i18n/localized.ts:34",
+        "src/components/i18n/tx.tsx:33"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "PARTIAL",
+      "findings": [
+        "QA-I18N-005"
+      ]
+    },
+    {
+      "id": "REQ-I18N-023",
+      "statement": "Every public URL is prefixed with /en or /ta",
+      "type": "invariant",
+      "source": [
+        "README.md:105"
+      ],
+      "module": "Internationalization",
+      "actor": null,
+      "implemented_by": [
+        "src/proxy.ts:30 (portals excluded by design, src/proxy.ts:27)"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-SEC-024",
+      "statement": "EDITOR cannot reach trust profile, settings, navigation, social links or users — enforced on the server for both page and action",
+      "type": "prohibition",
+      "source": [
+        "README.md:54",
+        "APPLICATION_CONTEXT.md:54"
+      ],
+      "module": "Authentication & authorization",
+      "actor": "ADMIN, EDITOR, PORTAL_USER",
+      "implemented_by": [
+        "pages src/app/admin/(dashboard)/trust/page.tsx:24, settings/page.tsx:21, navigation/page.tsx:14, social/page.tsx:15, users/page.tsx:10",
+        "actions src/server/actions/admin/settings.ts:26, :118",
+        "src/server/actions/admin/trust.ts:25"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-SEC-025",
+      "statement": "PORTAL_USER is denied every /admin page and action",
+      "type": "prohibition",
+      "source": [
+        "README.md:55",
+        "APPLICATION_CONTEXT.md:56"
+      ],
+      "module": "Authentication & authorization",
+      "actor": "ADMIN, EDITOR, PORTAL_USER",
+      "implemented_by": [
+        "src/server/auth-guard.ts:36, :45"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-SEC-026",
+      "statement": "The session user is re-read from the database on every request, so deleting an account revokes access immediately",
+      "type": "invariant",
+      "source": [
+        "APPLICATION_CONTEXT.md:54"
+      ],
+      "module": "Authentication & authorization",
+      "actor": "ADMIN, EDITOR, PORTAL_USER",
+      "implemented_by": [
+        "src/server/auth-guard.ts:22"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-SEC-027",
+      "statement": "Every admin page calls requireAdminPage() and every action or route calls requireAdmin(); the proxy is only a fast redirect",
+      "type": "obligation",
+      "source": [
+        "README.md:113",
+        "APPLICATION_CONTEXT.md:27"
+      ],
+      "module": "Authentication & authorization",
+      "actor": "ADMIN, EDITOR, PORTAL_USER",
+      "implemented_by": [
+        "src/app/admin/(dashboard)/layout.tsx:14",
+        "src/proxy.ts:15",
+        "but src/app/api/club/documents/[id]/file/route.ts:8, src/app/api/task-evidence/[id]/file/route.ts:8 authorize with getAdminUser() plus a scope check"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "PARTIAL",
+      "findings": [
+        "QA-REQ-005"
+      ]
+    },
+    {
+      "id": "REQ-SEC-028",
+      "statement": "Every upload entry point checks origin, size, declared MIME type, magic bytes and a rate limit",
+      "type": "obligation",
+      "source": [
+        "README.md:50",
+        "APPLICATION_CONTEXT.md:93"
+      ],
+      "module": "Authentication & authorization",
+      "actor": "ADMIN, EDITOR, PORTAL_USER",
+      "implemented_by": [
+        "src/app/api/admin/upload/route.ts:21, :50",
+        "src/app/api/admin/clubs/[id]/documents/route.ts:34",
+        "src/app/api/project-tasks/[id]/evidence/route.ts:37"
+      ],
+      "implementation_note": null,
+      "tested_by": [
+        "scripts/verify-club-ui.ts:118"
+      ],
+      "test_status": "COVERED-NOT-EXECUTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-SEC-029",
+      "statement": "Admin DTOs never include storage keys or password hashes",
+      "type": "prohibition",
+      "source": [
+        "README.md:115"
+      ],
+      "module": "Authentication & authorization",
+      "actor": "ADMIN, EDITOR, PORTAL_USER",
+      "implemented_by": [
+        "src/server/queries/admin-media.ts:23",
+        "src/server/queries/admin.ts:371"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-SEC-030",
+      "statement": "Sign-in, contact form and uploads are rate limited",
+      "type": "obligation",
+      "source": [
+        "README.md:114"
+      ],
+      "module": "Authentication & authorization",
+      "actor": "ADMIN, EDITOR, PORTAL_USER",
+      "implemented_by": [
+        "src/auth.ts:29",
+        "src/server/actions/contact.ts:59",
+        "src/app/api/admin/upload/route.ts:30"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "PARTIAL",
+      "findings": [
+        "QA-AUTH-001"
+      ]
+    },
+    {
+      "id": "REQ-SEC-031",
+      "statement": "./private-uploads is never served directly; the public file route rejects traversal",
+      "type": "prohibition",
+      "source": [
+        "README.md:264"
+      ],
+      "module": "Authentication & authorization",
+      "actor": "ADMIN, EDITOR, PORTAL_USER",
+      "implemented_by": [
+        "src/app/uploads/[...path]/route.ts:13"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-CLUB-032",
+      "statement": "/club/[id] is limited to that club's approved coordinator: active membership, COORDINATOR role, matching coordinatorId, active club",
+      "type": "authorization",
+      "source": [
+        "README.md:61",
+        "APPLICATION_CONTEXT.md:56"
+      ],
+      "module": "Club portal",
+      "actor": "Club coordinator / PORTAL_USER",
+      "implemented_by": [
+        "src/server/clubs/service.ts:203",
+        "src/app/club/[id]/page.tsx:16, :18"
+      ],
+      "implementation_note": null,
+      "tested_by": [
+        "scripts/verify-club-ui.ts:152"
+      ],
+      "test_status": "COVERED-NOT-EXECUTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-CLUB-033",
+      "statement": "Club membership never grants project access; project access needs an explicit active assignment carrying the required permission flag",
+      "type": "prohibition",
+      "source": [
+        "README.md:61",
+        "docs/security/permissions-matrix.md:5"
+      ],
+      "module": "Club portal",
+      "actor": "Club coordinator / PORTAL_USER",
+      "implemented_by": [
+        "src/server/projects/service.ts:81",
+        "src/app/club/projects/page.tsx:11",
+        "src/app/club/[id]/page.tsx:17"
+      ],
+      "implementation_note": null,
+      "tested_by": [
+        "scripts/verify-project-ui.ts (not executed)"
+      ],
+      "test_status": "COVERED-NOT-EXECUTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-CLUB-034",
+      "statement": "A membership request needs adult self-attestation and current versioned data-use consent; a trust admin decides and cannot approve their own request",
+      "type": "obligation",
+      "source": [
+        "README.md:61",
+        "APPLICATION_CONTEXT.md:56"
+      ],
+      "module": "Club portal",
+      "actor": "Club coordinator / PORTAL_USER",
+      "implemented_by": [
+        "src/server/clubs/service.ts:129, :152",
+        "prisma/migrations/20261025010000_phase2_clubs/migration.sql:138"
+      ],
+      "implementation_note": null,
+      "tested_by": [
+        "scripts/verify-club-migration.ts:43"
+      ],
+      "test_status": "COVERED-NOT-EXECUTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-CLUB-035",
+      "statement": "A coordinator sees skills and interests only for an active, opted-in member of their own club",
+      "type": "authorization",
+      "source": [
+        "APPLICATION_CONTEXT.md:58",
+        "docs/security/permissions-matrix.md:7"
+      ],
+      "module": "Club portal",
+      "actor": "Club coordinator / PORTAL_USER",
+      "implemented_by": [
+        "src/app/club/[id]/page.tsx:21 scopes the skills block, but :20 also lists every active member's name and email"
+      ],
+      "implementation_note": null,
+      "tested_by": [
+        "scripts/verify-club-ui.ts:138"
+      ],
+      "test_status": "COVERED-NOT-EXECUTED",
+      "verdict": "VIOLATED",
+      "findings": [
+        "QA-REQ-006"
+      ]
+    },
+    {
+      "id": "REQ-CLUB-036",
+      "statement": "Private club documents are served only after a fresh club-scope check; archived documents are unavailable",
+      "type": "authorization",
+      "source": [
+        "APPLICATION_CONTEXT.md:87"
+      ],
+      "module": "Club portal",
+      "actor": "Club coordinator / PORTAL_USER",
+      "implemented_by": [
+        "src/app/api/club/documents/[id]/file/route.ts:13, :15 (trust ADMIN is an explicit second path)"
+      ],
+      "implementation_note": null,
+      "tested_by": [
+        "scripts/verify-club-ui.ts:141"
+      ],
+      "test_status": "COVERED-NOT-EXECUTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-VOL-037",
+      "statement": "Attendance requires an active approved membership of the named active club; service hours require that person's approved attendance",
+      "type": "obligation",
+      "source": [
+        "README.md:62",
+        "APPLICATION_CONTEXT.md:58"
+      ],
+      "module": "Volunteer portal",
+      "actor": "Volunteer / PORTAL_USER",
+      "implemented_by": [
+        "src/server/volunteers/service.ts:63, :75, :107"
+      ],
+      "implementation_note": null,
+      "tested_by": [
+        "scripts/verify-volunteer-ui.ts (not executed)"
+      ],
+      "test_status": "COVERED-NOT-EXECUTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-VOL-038",
+      "statement": "Trust-admin review can never be self-review, for volunteer records or task completion",
+      "type": "prohibition",
+      "source": [
+        "APPLICATION_CONTEXT.md:58",
+        "docs/security/permissions-matrix.md:7"
+      ],
+      "module": "Volunteer portal",
+      "actor": "Volunteer / PORTAL_USER",
+      "implemented_by": [
+        "src/server/volunteers/service.ts:92, :106",
+        "src/server/projects/service.ts:237"
+      ],
+      "implementation_note": null,
+      "tested_by": [
+        "scripts/verify-volunteer-ui.ts (not executed)"
+      ],
+      "test_status": "COVERED-NOT-EXECUTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-VOL-039",
+      "statement": "Only APPROVED minutes linked to APPROVED attendance count toward a volunteer total; voiding attendance voids its hours",
+      "type": "invariant",
+      "source": [
+        "README.md:62",
+        "APPLICATION_CONTEXT.md:58"
+      ],
+      "module": "Volunteer portal",
+      "actor": "Volunteer / PORTAL_USER",
+      "implemented_by": [
+        "src/app/volunteer/page.tsx:19",
+        "src/server/volunteers/service.ts:96"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-PRJ-040",
+      "statement": "A volunteer needs a current consented profile, active club membership and an explicit active task assignment to read or update a task",
+      "type": "authorization",
+      "source": [
+        "APPLICATION_CONTEXT.md:60",
+        "docs/security/permissions-matrix.md:9"
+      ],
+      "module": "Project operations",
+      "actor": "Assigned volunteer, assignment coordinator, ADMIN",
+      "implemented_by": [
+        "src/server/projects/service.ts:197",
+        "src/app/volunteer/tasks/page.tsx:15"
+      ],
+      "implementation_note": null,
+      "tested_by": [
+        "scripts/verify-project-ui.ts (not executed)"
+      ],
+      "test_status": "COVERED-NOT-EXECUTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-FND-041",
+      "statement": "Donation request targets are positive integer INR paise; requests and campaigns stay DRAFT with null approval and release FKs",
+      "type": "invariant",
+      "source": [
+        "README.md:64",
+        "APPLICATION_CONTEXT.md:62"
+      ],
+      "module": "Fundraising",
+      "actor": "ADMIN",
+      "implemented_by": [
+        "prisma/migrations/20261026064436_phase5_fundraising_drafts/migration.sql:173"
+      ],
+      "implementation_note": null,
+      "tested_by": [
+        "scripts/verify-fundraising-migration.ts (not executed)"
+      ],
+      "test_status": "COVERED-NOT-EXECUTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-DON-042",
+      "statement": "Every donation row is constrained by SQL to positive paise, INR and PENDING_VERIFICATION",
+      "type": "invariant",
+      "source": [
+        "APPLICATION_CONTEXT.md:64"
+      ],
+      "module": "Donations",
+      "actor": "Donor / ADMIN",
+      "implemented_by": [
+        "prisma/migrations/20261026073000_phase6_donation_intake/migration.sql:81",
+        "prisma/schema.prisma:66"
+      ],
+      "implementation_note": null,
+      "tested_by": [
+        "scripts/verify-donations-migration.ts (not executed)"
+      ],
+      "test_status": "COVERED-NOT-EXECUTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-DON-043",
+      "statement": "A donor profile may link an existing PORTAL_USER account only; intake requires a published, non-demo project",
+      "type": "obligation",
+      "source": [
+        "APPLICATION_CONTEXT.md:64"
+      ],
+      "module": "Donations",
+      "actor": "Donor / ADMIN",
+      "implemented_by": [
+        "src/server/donations/service.ts:20, :46"
+      ],
+      "implementation_note": null,
+      "tested_by": [
+        "scripts/verify-donations-ui.ts (not executed)"
+      ],
+      "test_status": "COVERED-NOT-EXECUTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-DON-044",
+      "statement": "Donor profiles default to anonymous public display",
+      "type": "obligation",
+      "source": [
+        "APPLICATION_CONTEXT.md:64"
+      ],
+      "module": "Donations",
+      "actor": "Donor / ADMIN",
+      "implemented_by": [],
+      "implementation_note": "column default only (prisma/schema.prisma:1384); no code reads it; the admin control is disabled (src/components/admin/donation-intake.tsx:26)",
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "UNIMPLEMENTED",
+      "findings": [
+        "QA-REQ-007"
+      ]
+    },
+    {
+      "id": "REQ-DON-045",
+      "statement": "Donors see only their own pending history; references, internal notes, evidence and amounts stay out of public queries",
+      "type": "authorization",
+      "source": [
+        "APPLICATION_CONTEXT.md:64"
+      ],
+      "module": "Donations",
+      "actor": "Donor / ADMIN",
+      "implemented_by": [
+        "src/app/donor/page.tsx:14"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "UNTESTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-APPR-046",
+      "statement": "Live financial and public-release approval remains disabled; no threshold or approver assignment is active",
+      "type": "prohibition",
+      "source": [
+        "README.md:59",
+        "APPLICATION_CONTEXT.md:62"
+      ],
+      "module": "Approval engine",
+      "actor": "ADMIN",
+      "implemented_by": [
+        "src/server/fundraising/service.ts:67 (see qa/architecture/role-permission-matrix.md:26)"
+      ],
+      "implementation_note": null,
+      "tested_by": [
+        "src/lib/approval/definition.test.ts"
+      ],
+      "test_status": "COVERED-NOT-EXECUTED",
+      "verdict": "SATISFIED",
+      "findings": []
+    },
+    {
+      "id": "REQ-NOTIF-047",
+      "statement": "A financial mutation is never retried merely because notification delivery failed",
+      "type": "prohibition",
+      "source": [
+        "docs/architecture/trustfolio-expansion.md:97"
+      ],
+      "module": "Notifications",
+      "actor": null,
+      "implemented_by": [
+        "no delivery path exists",
+        "outbox rows are written and displayed only (qa/architecture/application-architecture.md:90)"
+      ],
+      "implementation_note": null,
+      "tested_by": [],
+      "test_status": "NOT-APPLICABLE",
+      "verdict": "UNVERIFIABLE",
+      "findings": []
+    }
+  ]
+}

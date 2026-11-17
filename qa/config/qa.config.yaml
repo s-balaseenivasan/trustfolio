@@ -1,0 +1,137 @@
+# Complete Application QA — run configuration
+# Copied into qa/config/qa.config.yaml on first run. Edit per repository.
+# An existing file is never overwritten.
+
+version: "1.0"
+
+application:
+  name: "existing-application"
+  mode: "discovery-first"
+  # Leave empty to auto-detect. Fill in only to narrow scope.
+  platforms: []          # e.g. [web, mobile, api, desktop, worker]
+  stacks: []             # e.g. [javascript, python, jvm, dotnet, go, dart]
+
+discovery:
+  auto_detect: true
+  # Layers to map. Technology within each layer is discovered, never assumed.
+  scan:
+    - frontend
+    - backend
+    - mobile
+    - api
+    - data_stores
+    - background_jobs
+    - integrations
+    - auth
+    - tests
+    - ci
+  exclude:
+    - node_modules
+    - .git
+    - build
+    - dist
+    - out
+    - target
+    - bin
+    - obj
+    - coverage
+    - .dart_tool
+    - .venv
+    - vendor
+    - Pods
+    - DerivedData
+    - generated
+  max_file_size_mb: 5
+  max_depth: 14
+  expose_secrets: false
+
+environments:
+  allowed:
+    - local
+    - test
+    - staging
+  blocked:
+    - production
+  # Set once confirmed with the user. Everything executable runs here and nowhere else.
+  active: "local"
+
+data_stores:
+  discovery_mode: auto
+  operations:
+    discovery: true
+    schema_analysis: true
+    read_queries: true
+    write_queries: false
+    migrations: false
+    destructive_operations: false
+  never_log_credentials: true
+  assume_shared_transactions: false
+
+testing:
+  unit: true
+  integration: true
+  api: true
+  web_e2e: true
+  mobile_e2e: true
+  contract: true
+  security: true
+  performance: true
+  regression: true
+  reuse_existing_frameworks: true
+  install_new_dependencies: false     # requires approval
+  write_outside_qa_dir: false         # requires approval
+
+ui_audit:
+  enabled: true
+  inspect:
+    - fields
+    - buttons
+    - forms
+    - navigation
+    - tables
+    - cards
+    - menus
+    - filters
+    - dialogs
+    - widgets
+    - empty_states
+    - loading_states
+    - error_states
+    - conditionally_rendered
+  classify:
+    - essential
+    - useful
+    - redundant
+    - potentially_unused
+    - broken
+    - unclear
+  require_removal_evidence: true
+  auto_delete: false
+
+performance:
+  # No universal thresholds. Set real targets here or leave null and report measurements only.
+  targets:
+    page_load_ms: null
+    api_p95_ms: null
+    db_query_ms: null
+  record_conditions: true    # environment, dataset size, concurrency, cold/warm
+
+fix_policy:
+  mode: approval_required
+  auto_modify_source: false
+  auto_delete_elements: false
+  require_impact_analysis: true
+  require_regression_tests: true
+  approval_scope: per_finding    # approving one fix never approves another
+
+reporting:
+  output_dir: qa
+  formats:
+    - markdown
+    - json
+  include_evidence: true
+  include_file_paths: true
+  include_untested_areas: true
+  include_confidence: true
+  redact_secrets: true
+  redact_personal_data: true

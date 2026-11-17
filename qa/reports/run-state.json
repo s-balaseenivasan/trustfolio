@@ -1,0 +1,235 @@
+{
+  "runs": [
+    {
+      "at": "2026-11-16T10:29:39.559Z",
+      "commit": null,
+      "findings": 6,
+      "new": 6,
+      "resolved": 0,
+      "baselineAccepted": false
+    },
+    {
+      "at": "2026-11-16T10:29:39.839Z",
+      "commit": null,
+      "findings": 6,
+      "new": 6,
+      "resolved": 0,
+      "baselineAccepted": true
+    },
+    {
+      "at": "2026-11-16T10:29:55.471Z",
+      "commit": null,
+      "findings": 5,
+      "new": 0,
+      "resolved": 1,
+      "baselineAccepted": false
+    },
+    {
+      "at": "2026-11-16T10:35:56.474Z",
+      "commit": null,
+      "findings": 6,
+      "new": 0,
+      "resolved": 0,
+      "baselineAccepted": false
+    },
+    {
+      "at": "2026-11-16T10:37:47.493Z",
+      "commit": null,
+      "findings": 6,
+      "new": 0,
+      "resolved": 0,
+      "baselineAccepted": false
+    },
+    {
+      "at": "2026-11-16T11:18:53.960Z",
+      "commit": null,
+      "findings": 29,
+      "new": 24,
+      "resolved": 1,
+      "baselineAccepted": false
+    },
+    {
+      "at": "2026-11-16T11:20:02.682Z",
+      "commit": null,
+      "findings": 29,
+      "new": 23,
+      "resolved": 0,
+      "baselineAccepted": false
+    },
+    {
+      "at": "2026-11-16T11:48:15.791Z",
+      "commit": null,
+      "findings": 42,
+      "new": 36,
+      "resolved": 0,
+      "baselineAccepted": false
+    },
+    {
+      "at": "2026-11-16T12:47:25.090Z",
+      "commit": null,
+      "findings": 54,
+      "new": 48,
+      "resolved": 0,
+      "baselineAccepted": false
+    },
+    {
+      "at": "2026-11-16T12:47:58.653Z",
+      "commit": null,
+      "findings": 54,
+      "new": 48,
+      "resolved": 0,
+      "baselineAccepted": false
+    },
+    {
+      "at": "2026-11-16T12:48:37.031Z",
+      "commit": null,
+      "findings": 54,
+      "new": 48,
+      "resolved": 0,
+      "baselineAccepted": false
+    },
+    {
+      "at": "2026-11-16T12:48:57.715Z",
+      "commit": null,
+      "findings": 54,
+      "new": 48,
+      "resolved": 0,
+      "baselineAccepted": false
+    },
+    {
+      "at": "2026-11-16T13:00:25.368Z",
+      "commit": null,
+      "findings": 57,
+      "new": 51,
+      "resolved": 0,
+      "baselineAccepted": false
+    }
+  ],
+  "latest": {
+    "at": "2026-11-16T13:00:36.545Z",
+    "commit": null,
+    "branch": null
+  },
+  "phases": {
+    "0": {
+      "name": "Preflight",
+      "completedAt": "2026-11-16T12:22:29.556Z",
+      "commit": null,
+      "branch": null,
+      "artifacts": [
+        "qa/discovery/repository-inventory.json",
+        "qa/reports/mechanical-analysis.json"
+      ],
+      "note": null,
+      "forced": false
+    },
+    "1": {
+      "name": "Repository discovery",
+      "completedAt": "2026-11-16T12:22:29.701Z",
+      "commit": null,
+      "branch": null,
+      "artifacts": [
+        "qa/architecture/application-architecture.md"
+      ],
+      "note": null,
+      "forced": false
+    },
+    "2": {
+      "name": "Requirements inventory",
+      "completedAt": "2026-11-16T12:22:29.854Z",
+      "commit": null,
+      "branch": null,
+      "artifacts": [
+        "qa/discovery/requirements-inventory.json"
+      ],
+      "note": null,
+      "forced": false
+    },
+    "3": {
+      "name": "Frontend / UI audit",
+      "completedAt": "2026-11-16T12:22:29.996Z",
+      "commit": null,
+      "branch": null,
+      "artifacts": [
+        "qa/ui-audit/frontend-ui-audit.md"
+      ],
+      "note": null,
+      "forced": false
+    },
+    "4": {
+      "name": "Mobile app audit",
+      "completedAt": "2026-11-16T12:22:30.563Z",
+      "commit": null,
+      "branch": null,
+      "artifacts": [],
+      "note": "skipped: no mobile project in this repository",
+      "forced": true
+    },
+    "5": {
+      "name": "Backend & API audit",
+      "completedAt": "2026-11-16T12:22:30.130Z",
+      "commit": null,
+      "branch": null,
+      "artifacts": [
+        "qa/architecture/api-inventory.md"
+      ],
+      "note": null,
+      "forced": false
+    },
+    "6": {
+      "name": "Data layer audit",
+      "completedAt": "2026-11-16T12:22:30.272Z",
+      "commit": null,
+      "branch": null,
+      "artifacts": [
+        "qa/architecture/database-dependency-map.md"
+      ],
+      "note": null,
+      "forced": false
+    },
+    "7": {
+      "name": "Workflow & knowledge graph",
+      "completedAt": "2026-11-16T12:22:30.416Z",
+      "commit": null,
+      "branch": null,
+      "artifacts": [
+        "qa/workflows/knowledge-graph.json"
+      ],
+      "note": null,
+      "forced": false
+    },
+    "8": {
+      "name": "Runtime verification",
+      "completedAt": "2026-11-16T13:00:25.648Z",
+      "commit": null,
+      "branch": null,
+      "artifacts": [
+        "qa/reports/route-smoke.json"
+      ],
+      "note": null,
+      "forced": false
+    },
+    "10": {
+      "name": "Bug & root-cause analysis",
+      "completedAt": "2026-11-16T13:00:36.390Z",
+      "commit": null,
+      "branch": null,
+      "artifacts": [
+        "qa/reports/bug-analysis.md"
+      ],
+      "note": null,
+      "forced": false
+    },
+    "11": {
+      "name": "Regression",
+      "completedAt": "2026-11-16T13:00:36.545Z",
+      "commit": null,
+      "branch": null,
+      "artifacts": [
+        "qa/reports/regression.md"
+      ],
+      "note": null,
+      "forced": false
+    }
+  }
+}

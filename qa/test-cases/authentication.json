@@ -1,0 +1,96 @@
+{
+  "module": "Authentication",
+  "source_md": "qa/test-cases/authentication.md",
+  "test_file": "qa/tests/security/login-lockout.test.ts",
+  "cases": [
+    {
+      "id": "TC-AUTH-LOCKOUT-001",
+      "title": "Per-(IP,email) limiter blocks the 6th attempt from the same IP, even with the correct password",
+      "workflow": "workflow.admin.login",
+      "requirement": "REQ-SEC-030",
+      "type": "security",
+      "priority": "critical",
+      "role": "anonymous",
+      "status": "EXECUTED-PASS",
+      "evidence": ["qa/reports/evidence/run-qa-20261116/login-lockout.log"]
+    },
+    {
+      "id": "TC-AUTH-LOCKOUT-001b",
+      "title": "The per-account limiter keeps counting independently through the IP+email trip, without itself tripping",
+      "workflow": "workflow.admin.login",
+      "requirement": "DERIVED-FROM-CODE",
+      "type": "security",
+      "priority": "high",
+      "role": "anonymous",
+      "status": "EXECUTED-PASS",
+      "evidence": ["qa/reports/evidence/run-qa-20261116/login-lockout.log"]
+    },
+    {
+      "id": "TC-AUTH-LOCKOUT-002",
+      "title": "A fresh IP for the same account gets its own (ip,email) budget and the correct-password login succeeds",
+      "workflow": "workflow.admin.login",
+      "requirement": "REQ-SEC-030",
+      "type": "security",
+      "priority": "high",
+      "role": "anonymous",
+      "status": "EXECUTED-PASS",
+      "evidence": ["qa/reports/evidence/run-qa-20261116/login-lockout.log"]
+    },
+    {
+      "id": "TC-AUTH-LOCKOUT-003",
+      "title": "A successful login clears BOTH rate-limit keys, not just the per-IP one (regression guard)",
+      "workflow": "workflow.admin.login",
+      "requirement": "DERIVED-FROM-CODE",
+      "type": "security",
+      "priority": "critical",
+      "role": "anonymous",
+      "status": "EXECUTED-PASS",
+      "evidence": ["qa/reports/evidence/run-qa-20261116/login-lockout.log"],
+      "regression_of": "QA-REG-001"
+    },
+    {
+      "id": "TC-AUTH-LOCKOUT-004a",
+      "title": "After 20 failed attempts from 20 distinct IPs, the account counter reads 20 and has not yet tripped",
+      "workflow": "workflow.admin.login",
+      "requirement": "DERIVED-FROM-CODE",
+      "type": "security",
+      "priority": "high",
+      "role": "anonymous",
+      "status": "EXECUTED-PASS",
+      "evidence": ["qa/reports/evidence/run-qa-20261116/login-lockout.log"]
+    },
+    {
+      "id": "TC-AUTH-LOCKOUT-004b",
+      "title": "The 21st attempt, from a never-used IP, with the CORRECT password, is still refused",
+      "workflow": "workflow.admin.login",
+      "requirement": "REQ-SEC-030",
+      "type": "security",
+      "priority": "critical",
+      "role": "anonymous",
+      "status": "EXECUTED-PASS",
+      "evidence": ["qa/reports/evidence/run-qa-20261116/login-lockout.log"]
+    },
+    {
+      "id": "TC-AUTH-LOCKOUT-004c",
+      "title": "The fresh IP's own (ip,email) counter is nowhere near its own limit",
+      "workflow": "workflow.admin.login",
+      "requirement": "DERIVED-FROM-CODE",
+      "type": "security",
+      "priority": "medium",
+      "role": "anonymous",
+      "status": "EXECUTED-PASS",
+      "evidence": ["qa/reports/evidence/run-qa-20261116/login-lockout.log"]
+    },
+    {
+      "id": "TC-AUTH-LOCKOUT-005",
+      "title": "rateLimit()'s single-statement upsert is atomic under concurrent calls",
+      "workflow": "workflow.admin.login",
+      "requirement": "DERIVED-FROM-CODE",
+      "type": "security",
+      "priority": "high",
+      "role": "n/a",
+      "status": "EXECUTED-PASS",
+      "evidence": ["qa/reports/evidence/run-qa-20261116/login-lockout.log"]
+    }
+  ]
+}

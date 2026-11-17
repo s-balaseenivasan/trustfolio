@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 640" width="900" height="640" role="img" aria-label="Demo certificate example">
+  <rect width="900" height="640" fill="#fbf7ee"/>
+  <rect x="24" y="24" width="852" height="592" fill="none" stroke="#b08a3e" stroke-width="6"/>
+  <rect x="44" y="44" width="812" height="552" fill="none" stroke="#b08a3e" stroke-width="1.5"/>
+  <text x="450" y="150" text-anchor="middle" font-family="Georgia, serif" font-size="46" fill="#3c2f1a">Certificate Example</text>
+  <text x="450" y="205" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" letter-spacing="4" fill="#8a6d33">DEMO — NOT A REAL CERTIFICATE</text>
+  <path d="M250 300h400M250 360h400M320 420h260" stroke="#d9c8a3" stroke-width="3"/>
+  <circle cx="450" cy="510" r="46" fill="none" stroke="#b08a3e" stroke-width="4"/>
+  <text x="450" y="517" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#b08a3e">DEMO</text>
+</svg>

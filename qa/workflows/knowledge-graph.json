@@ -1,0 +1,1198 @@
+{
+  "meta": {
+    "phase": "6 — end-to-end workflow synthesis",
+    "environment": "static analysis only; application not started, no database, no HTTP exchange observed",
+    "scope": "the six workflows named in the phase-6 brief, plus the six unit-test files and the requirement nodes those workflows traverse",
+    "confidence_key": {
+      "confirmed": "every edge traced to a file:line in this repository",
+      "suspected": "the edge is implied by code structure but a step in the chain was not line-traced, or its reachability depends on runtime state that was not observed"
+    },
+    "regression_rule": "when a change touches node X, the regression set is X plus every node reachable by following consumed_by transitively; test nodes reachable that way are the tests that already guard the change",
+    "generatedAt": "2026-11-16"
+  },
+  "nodes": [
+    {
+      "id": "workflow.admin.login",
+      "type": "service",
+      "label": "WF1 — Admin login to dashboard",
+      "evidence": ["src/app/admin/login/page.tsx:13", "src/auth.ts:24", "src/app/admin/(dashboard)/layout.tsx:14"],
+      "depends_on": ["ui.login.form", "api.auth.nextauth", "svc.auth.authorize", "svc.auth.requireAdminPage"],
+      "consumed_by": ["out.admin.dashboard"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "ui.login.page",
+      "type": "ui",
+      "label": "Login page — redirects an already-signed-in actor by role",
+      "evidence": ["src/app/admin/login/page.tsx:15", "src/app/admin/login/page.tsx:16"],
+      "depends_on": ["svc.auth.getAdminUser"],
+      "consumed_by": ["ui.login.form", "workflow.admin.login"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "ui.login.form",
+      "type": "ui",
+      "label": "LoginForm — email, password, hidden callbackUrl; noValidate",
+      "evidence": ["src/app/admin/login/login-form.tsx:17", "src/app/admin/login/login-form.tsx:24"],
+      "depends_on": ["svc.actions.auth.login"],
+      "consumed_by": ["workflow.admin.login"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.actions.auth.login",
+      "type": "service",
+      "label": "login() server action — Zod parse, safeCallback open-redirect guard, signIn",
+      "evidence": ["src/server/actions/auth.ts:22", "src/server/actions/auth.ts:10", "src/server/actions/auth.ts:41"],
+      "depends_on": ["api.auth.nextauth", "svc.validations.login"],
+      "consumed_by": ["ui.login.form", "workflow.admin.login"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.validations.login",
+      "type": "service",
+      "label": "loginSchema",
+      "evidence": ["src/lib/validations/auth.ts"],
+      "depends_on": [],
+      "consumed_by": ["svc.actions.auth.login", "svc.auth.authorize"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "api.auth.nextauth",
+      "type": "api",
+      "label": "GET/POST /api/auth/[...nextauth] — NextAuth v5 handler, JWT session, 8h maxAge",
+      "evidence": ["src/auth.ts:16", "src/auth.config.ts:13"],
+      "depends_on": ["svc.auth.authorize"],
+      "consumed_by": ["svc.actions.auth.login", "workflow.admin.login"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.auth.authorize",
+      "type": "service",
+      "label": "Credentials.authorize — rate limit, bcrypt compare against DUMMY_HASH when user absent, lastLoginAt + ActivityLog in one transaction",
+      "evidence": ["src/auth.ts:24", "src/auth.ts:29", "src/auth.ts:34", "src/auth.ts:38"],
+      "depends_on": ["svc.ratelimit", "entity.user", "entity.activitylog"],
+      "consumed_by": ["api.auth.nextauth", "workflow.admin.login"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.ratelimit",
+      "type": "service",
+      "label": "rateLimit() — Postgres fixed-window counter, raw SQL upsert on RateLimit.key",
+      "evidence": ["src/lib/rate-limit.ts:17", "src/lib/rate-limit.ts:51"],
+      "depends_on": ["entity.ratelimit"],
+      "consumed_by": ["svc.auth.authorize", "api.admin.upload", "api.projecttasks.evidence", "svc.actions.club.requestMembership", "svc.actions.volunteer.run", "svc.actions.projects.updateAssignedTask"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.auth.getAdminUser",
+      "type": "service",
+      "label": "getAdminUser() — re-reads the User row from Postgres on every request (REQ-SEC-026)",
+      "evidence": ["src/server/auth-guard.ts:22"],
+      "depends_on": ["entity.user", "api.auth.nextauth"],
+      "consumed_by": ["svc.auth.requireAdmin", "svc.auth.requireAdminPage", "ui.login.page", "api.club.documentFile", "api.taskevidence.file", "api.projecttasks.evidence", "svc.actions.club.requestMembership", "svc.actions.volunteer.run", "svc.actions.projects.updateAssignedTask", "ui.donor.page", "ui.club.portal", "ui.volunteer.workspace"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.auth.requireAdminPage",
+      "type": "service",
+      "label": "requireAdminPage(role?) — redirect: no user to /admin/login, PORTAL_USER to /club, non-ADMIN to /admin",
+      "evidence": ["src/server/auth-guard.ts:33"],
+      "depends_on": ["svc.auth.getAdminUser"],
+      "consumed_by": ["out.admin.dashboard", "ui.admin.clubDetail", "ui.admin.volunteers", "ui.admin.donations", "ui.admin.projectOps"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.auth.requireAdmin",
+      "type": "service",
+      "label": "requireAdmin(role?) — throws UnauthorizedError; PORTAL_USER always denied",
+      "evidence": ["src/server/auth-guard.ts:42"],
+      "depends_on": ["svc.auth.getAdminUser"],
+      "consumed_by": ["api.admin.upload", "api.admin.clubDocuments", "svc.actions.admin.clubs.run", "svc.actions.admin.decideVolunteerRecord", "svc.actions.admin.projectops.run", "svc.actions.admin.donations.run", "svc.actions.admin.media.deleteMedia", "svc.actions.admin.evidence.saveDocument"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.proxy",
+      "type": "service",
+      "label": "proxy() — optimistic cookie-presence redirect for /admin; /club /volunteer /donor excluded; locale prefixing",
+      "evidence": ["src/proxy.ts:13", "src/proxy.ts:18", "src/proxy.ts:27"],
+      "depends_on": [],
+      "consumed_by": ["workflow.admin.login"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.authconfig.authorized",
+      "type": "service",
+      "label": "authConfig.callbacks.authorized — DEAD: proxy.ts does not import authConfig and nothing exports auth as middleware",
+      "evidence": ["src/auth.config.ts:19", "src/auth.config.ts:5", "src/proxy.ts:1"],
+      "depends_on": [],
+      "consumed_by": [],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "out.admin.dashboard",
+      "type": "service",
+      "label": "Admin dashboard output — evidence coverage, content counts, recent messages, recent ActivityLog",
+      "evidence": ["src/app/admin/(dashboard)/page.tsx:33", "src/app/admin/(dashboard)/page.tsx:35"],
+      "depends_on": ["svc.auth.requireAdminPage", "entity.activitylog"],
+      "consumed_by": ["workflow.admin.login"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "entity.user",
+      "type": "entity",
+      "label": "User (Postgres) — Role ADMIN|EDITOR|PORTAL_USER; ~25 inbound relations, nearly all onDelete Restrict",
+      "evidence": ["prisma/schema.prisma:269", "prisma/schema.prisma:24"],
+      "depends_on": [],
+      "consumed_by": ["svc.auth.authorize", "svc.auth.getAdminUser", "svc.clubs.requestMembership", "svc.donations.createDonorProfile"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "entity.ratelimit",
+      "type": "entity",
+      "label": "RateLimit (Postgres) — PK on key confirmed in init migration SQL",
+      "evidence": ["prisma/schema.prisma:720", "prisma/migrations/20260930085332_init/migration.sql:68"],
+      "depends_on": [],
+      "consumed_by": ["svc.ratelimit"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "entity.activitylog",
+      "type": "entity",
+      "label": "ActivityLog (Postgres) — written by login and every admin mutation; userId onDelete SetNull and unindexed",
+      "evidence": ["prisma/schema.prisma:704", "prisma/schema.prisma:713", "src/server/actions/admin-helpers.ts:71"],
+      "depends_on": [],
+      "consumed_by": ["out.admin.dashboard", "svc.auth.authorize"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "entity.auditevent",
+      "type": "entity",
+      "label": "AuditEvent (Postgres) — immutable by SQL trigger; written by every operational service; only reader found is the admin club detail page",
+      "evidence": ["prisma/schema.prisma:669", "prisma/migrations/20261025000000_phase1_approval_foundation/migration.sql:276", "src/app/admin/(dashboard)/clubs/[id]/page.tsx:17"],
+      "depends_on": [],
+      "consumed_by": ["ui.admin.clubDetail"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "entity.notificationoutbox",
+      "type": "entity",
+      "label": "NotificationOutbox (Postgres) — rows written inside the business transaction; no consumer moves PENDING to SENT",
+      "evidence": ["prisma/schema.prisma:686", "src/server/clubs/service.ts:161", "src/app/admin/(dashboard)/approvals/page.tsx:20"],
+      "depends_on": [],
+      "consumed_by": ["out.notification.undelivered"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "out.notification.undelivered",
+      "type": "job",
+      "label": "MISSING consumer — no cron, queue worker or sender exists; outbox rows are written and displayed only",
+      "evidence": ["qa/architecture/application-architecture.md:90", "src/lib/email.ts:16"],
+      "depends_on": ["entity.notificationoutbox"],
+      "consumed_by": [],
+      "confidence": "confirmed"
+    },
+
+    {
+      "id": "workflow.club.membership",
+      "type": "service",
+      "label": "WF2 — Club membership request to active membership (reviewer is a trust ADMIN, not the coordinator)",
+      "evidence": ["src/components/club/membership-request.tsx:11", "src/server/clubs/service.ts:129", "src/server/clubs/service.ts:146"],
+      "depends_on": ["ui.club.membershipRequest", "svc.actions.club.requestMembership", "svc.clubs.requestMembership", "ui.admin.clubDetail", "svc.actions.admin.decideMembership", "svc.clubs.reviewMembership"],
+      "consumed_by": ["out.club.workspaceAccess", "workflow.volunteer.servicelog", "workflow.project.task"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "ui.club.portal",
+      "type": "ui",
+      "label": "/club — my memberships plus paginated active-club explorer",
+      "evidence": ["src/app/club/page.tsx:13", "src/app/club/page.tsx:22"],
+      "depends_on": ["svc.auth.getAdminUser", "entity.club", "entity.clubmembership"],
+      "consumed_by": ["ui.club.membershipRequest", "workflow.club.membership"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "ui.club.membershipRequest",
+      "type": "ui",
+      "label": "MembershipRequest — adult + consent checkboxes, both required client-side",
+      "evidence": ["src/components/club/membership-request.tsx:15", "src/components/club/membership-request.tsx:16"],
+      "depends_on": ["svc.actions.club.requestMembership"],
+      "consumed_by": ["workflow.club.membership"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.actions.club.requestMembership",
+      "type": "service",
+      "label": "requestMyClubMembership — getAdminUser, consent re-check, rate limit club-request 10/h",
+      "evidence": ["src/server/actions/club/membership.ts:11", "src/server/actions/club/membership.ts:19", "src/server/actions/club/membership.ts:20"],
+      "depends_on": ["svc.auth.getAdminUser", "svc.ratelimit", "svc.clubs.requestMembership"],
+      "consumed_by": ["ui.club.membershipRequest", "workflow.club.membership"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.clubs.requestMembership",
+      "type": "service",
+      "label": "requestClubMembership — self-scope guard, club must be ACTIVE, Serializable transaction, writes membership + history + audit; writes NO outbox row",
+      "evidence": ["src/server/clubs/service.ts:129", "src/server/clubs/service.ts:130", "src/server/clubs/service.ts:134", "src/server/clubs/service.ts:141"],
+      "depends_on": ["entity.club", "entity.clubmembership", "entity.clubmembershiphistory", "entity.auditevent"],
+      "consumed_by": ["svc.actions.club.requestMembership", "workflow.club.membership"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "ui.admin.clubDetail",
+      "type": "ui",
+      "label": "/admin/clubs/[id] — ClubAdminEditor; loads every User row and every membership with full history, unbounded",
+      "evidence": ["src/app/admin/(dashboard)/clubs/[id]/page.tsx:11", "src/app/admin/(dashboard)/clubs/[id]/page.tsx:15", "src/app/admin/(dashboard)/clubs/[id]/page.tsx:16"],
+      "depends_on": ["svc.auth.requireAdminPage", "entity.clubmembership", "entity.auditevent", "entity.user"],
+      "consumed_by": ["svc.actions.admin.decideMembership", "workflow.club.membership"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.actions.admin.clubs.run",
+      "type": "service",
+      "label": "admin/clubs.ts run() wrapper — requireAdmin('ADMIN') for all 8 exported club actions",
+      "evidence": ["src/server/actions/admin/clubs.ts:14", "src/server/actions/admin/clubs.ts:17"],
+      "depends_on": ["svc.auth.requireAdmin"],
+      "consumed_by": ["svc.actions.admin.decideMembership", "svc.actions.admin.setCoordinator"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.actions.admin.decideMembership",
+      "type": "service",
+      "label": "decideMembership — APPROVE|REJECT with optimistic version and free-text reason",
+      "evidence": ["src/server/actions/admin/clubs.ts:83", "src/server/actions/admin/clubs.ts:90"],
+      "depends_on": ["svc.actions.admin.clubs.run", "svc.clubs.reviewMembership"],
+      "consumed_by": ["ui.admin.clubDetail", "workflow.club.membership"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.clubs.reviewMembership",
+      "type": "service",
+      "label": "reviewClubMembership — REASON_REQUIRED on reject, status/version conflict check, club ACTIVE check, SELF_APPROVAL ban, current-consent re-check",
+      "evidence": ["src/server/clubs/service.ts:146", "src/server/clubs/service.ts:147", "src/server/clubs/service.ts:152", "src/server/clubs/service.ts:153", "src/server/clubs/service.ts:161"],
+      "depends_on": ["entity.clubmembership", "entity.clubmembershiphistory", "entity.auditevent", "entity.notificationoutbox"],
+      "consumed_by": ["svc.actions.admin.decideMembership", "out.club.workspaceAccess", "workflow.club.membership"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.actions.admin.setCoordinator",
+      "type": "service",
+      "label": "setCoordinator -> appointClubCoordinator — requires an ACTIVE membership first; demotes the previous coordinator",
+      "evidence": ["src/server/actions/admin/clubs.ts:96", "src/server/clubs/service.ts:166", "src/server/clubs/service.ts:172"],
+      "depends_on": ["svc.actions.admin.clubs.run", "entity.clubmembership", "entity.club"],
+      "consumed_by": ["svc.clubs.requireClubCoordinator", "workflow.club.membership"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.clubs.requireClubCoordinator",
+      "type": "service",
+      "label": "requireClubCoordinator — membership ACTIVE and role COORDINATOR and club ACTIVE and club.coordinatorId === userId (REQ-CLUB-032)",
+      "evidence": ["src/server/clubs/service.ts:203", "src/server/clubs/service.ts:208"],
+      "depends_on": ["entity.clubmembership", "entity.club"],
+      "consumed_by": ["out.club.workspaceAccess", "api.club.documentFile"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "out.club.workspaceAccess",
+      "type": "ui",
+      "label": "/club/[id] coordinator workspace — roster (name + email), private documents, assigned projects",
+      "evidence": ["src/app/club/[id]/page.tsx:16", "src/app/club/[id]/page.tsx:17", "src/app/club/[id]/page.tsx:20"],
+      "depends_on": ["svc.clubs.requireClubCoordinator", "entity.clubmembership", "entity.clubdocument"],
+      "consumed_by": ["api.club.documentFile", "workflow.club.membership"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "api.admin.clubDocuments",
+      "type": "api",
+      "label": "POST /api/admin/clubs/[id]/documents — ADMIN only, host-only same-origin, sniff, stores under private/club-documents/, compensating delete on failure",
+      "evidence": ["src/app/api/admin/clubs/[id]/documents/route.ts:14", "src/app/api/admin/clubs/[id]/documents/route.ts:17", "src/app/api/admin/clubs/[id]/documents/route.ts:35", "src/app/api/admin/clubs/[id]/documents/route.ts:41"],
+      "depends_on": ["svc.auth.requireAdmin", "svc.storage.storeFile", "entity.clubdocument", "entity.media"],
+      "consumed_by": ["api.club.documentFile", "out.club.workspaceAccess"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "api.club.documentFile",
+      "type": "api",
+      "label": "GET /api/club/documents/[id]/file — ADMIN bypass else requireClubCoordinator; no storage-key-prefix check (QA-API-001)",
+      "evidence": ["src/app/api/club/documents/[id]/file/route.ts:8", "src/app/api/club/documents/[id]/file/route.ts:13", "src/app/api/club/documents/[id]/file/route.ts:15"],
+      "depends_on": ["svc.auth.getAdminUser", "svc.clubs.requireClubCoordinator", "entity.clubdocument", "svc.storage.readPrivateFile"],
+      "consumed_by": ["out.club.workspaceAccess"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "entity.club",
+      "type": "entity",
+      "label": "Club (Postgres) — DRAFT|ACTIVE|SUSPENDED|ARCHIVED, optimistic version, no delete path anywhere",
+      "evidence": ["prisma/schema.prisma:320", "src/server/clubs/service.ts:64"],
+      "depends_on": [],
+      "consumed_by": ["svc.clubs.requestMembership", "svc.clubs.reviewMembership", "svc.clubs.requireClubCoordinator", "ui.club.portal"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "entity.clubmembership",
+      "type": "entity",
+      "label": "ClubMembership (Postgres) — unique (clubId,userId); INVITED|REQUESTED|ACTIVE|REJECTED|SUSPENDED|ENDED; carries consentAt/adultAttestedAt/consentVersion",
+      "evidence": ["prisma/schema.prisma:350", "src/server/clubs/service.ts:138"],
+      "depends_on": ["entity.club", "entity.user"],
+      "consumed_by": ["svc.clubs.reviewMembership", "svc.clubs.requireClubCoordinator", "svc.volunteers.submitAttendance", "svc.projects.requireVolunteerTask", "out.club.workspaceAccess"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "entity.clubmembershiphistory",
+      "type": "entity",
+      "label": "ClubMembershipHistory (Postgres) — immutable by SQL trigger",
+      "evidence": ["prisma/schema.prisma:374", "prisma/migrations/20261025010000_phase2_clubs/migration.sql:141"],
+      "depends_on": ["entity.clubmembership"],
+      "consumed_by": ["svc.clubs.requestMembership", "svc.clubs.reviewMembership", "ui.admin.clubDetail"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "entity.clubdocument",
+      "type": "entity",
+      "label": "ClubDocument (Postgres row) + private file bytes; mediaId onDelete Restrict; the only evidence table with a working archive writer",
+      "evidence": ["prisma/schema.prisma:392", "prisma/schema.prisma:403", "src/server/clubs/service.ts:99"],
+      "depends_on": ["entity.media", "entity.club"],
+      "consumed_by": ["api.club.documentFile", "out.club.workspaceAccess"],
+      "confidence": "confirmed"
+    },
+
+    {
+      "id": "workflow.volunteer.servicelog",
+      "type": "service",
+      "label": "WF3 — Volunteer attendance and service log to approved hours",
+      "evidence": ["src/components/volunteer/workspace.tsx:37", "src/server/volunteers/service.ts:72", "src/server/volunteers/service.ts:85"],
+      "depends_on": ["ui.volunteer.workspace", "svc.actions.volunteer.submitAttendance", "svc.volunteers.submitAttendance", "svc.actions.volunteer.submitServiceLog", "svc.volunteers.submitServiceLog", "ui.admin.volunteers", "svc.actions.admin.decideVolunteerRecord", "svc.volunteers.reviewRecord"],
+      "consumed_by": ["out.volunteer.approvedMinutes"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "ui.volunteer.workspace",
+      "type": "ui",
+      "label": "/volunteer VolunteerWorkspace — profile+consent, availability, attendance, service-hours forms; hours form only rendered for APPROVED attendance without an existing log",
+      "evidence": ["src/app/volunteer/page.tsx:11", "src/components/volunteer/workspace.tsx:19", "src/components/volunteer/workspace.tsx:38"],
+      "depends_on": ["svc.auth.getAdminUser", "entity.volunteerprofile", "entity.volunteerattendance", "entity.volunteerservicelog"],
+      "consumed_by": ["svc.actions.volunteer.run", "workflow.volunteer.servicelog"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.actions.volunteer.run",
+      "type": "service",
+      "label": "volunteer/records.ts run() wrapper — getAdminUser + rate limit volunteer-write 30/h, feeds all five portal actions",
+      "evidence": ["src/server/actions/volunteer/records.ts:13", "src/server/actions/volunteer/records.ts:16", "src/server/actions/volunteer/records.ts:18"],
+      "depends_on": ["svc.auth.getAdminUser", "svc.ratelimit"],
+      "consumed_by": ["svc.actions.volunteer.submitAttendance", "svc.actions.volunteer.submitServiceLog", "svc.actions.volunteer.saveProfile"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.actions.volunteer.saveProfile",
+      "type": "service",
+      "label": "saveMyVolunteerProfile -> saveVolunteerProfile — consent version gate, optimistic version",
+      "evidence": ["src/server/actions/volunteer/records.ts:33", "src/server/volunteers/service.ts:15", "src/server/volunteers/service.ts:26"],
+      "depends_on": ["svc.actions.volunteer.run", "entity.volunteerprofile"],
+      "consumed_by": ["svc.volunteers.submitAttendance", "svc.projects.setTaskVolunteer", "workflow.volunteer.servicelog"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.actions.volunteer.submitAttendance",
+      "type": "service",
+      "label": "submitMyAttendance — attendanceSchema parse",
+      "evidence": ["src/server/actions/volunteer/records.ts:65"],
+      "depends_on": ["svc.actions.volunteer.run", "svc.volunteers.submitAttendance"],
+      "consumed_by": ["ui.volunteer.workspace", "workflow.volunteer.servicelog"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.volunteers.submitAttendance",
+      "type": "service",
+      "label": "submitAttendance — no future date, current consent version, ACTIVE membership of an ACTIVE club (REQ-VOL-037)",
+      "evidence": ["src/server/volunteers/service.ts:55", "src/server/volunteers/service.ts:57", "src/server/volunteers/service.ts:63", "src/server/volunteers/service.ts:64"],
+      "depends_on": ["entity.volunteerprofile", "entity.clubmembership", "entity.volunteerattendance", "entity.auditevent"],
+      "consumed_by": ["svc.volunteers.submitServiceLog", "workflow.volunteer.servicelog"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.actions.volunteer.submitServiceLog",
+      "type": "service",
+      "label": "submitMyServiceLog — serviceLogSchema parse",
+      "evidence": ["src/server/actions/volunteer/records.ts:73"],
+      "depends_on": ["svc.actions.volunteer.run", "svc.volunteers.submitServiceLog"],
+      "consumed_by": ["ui.volunteer.workspace", "workflow.volunteer.servicelog"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.volunteers.submitServiceLog",
+      "type": "service",
+      "label": "submitServiceLog — attendance must be the actor's own, APPROVED, club ACTIVE, with no existing log; membership re-checked",
+      "evidence": ["src/server/volunteers/service.ts:72", "src/server/volunteers/service.ts:75", "src/server/volunteers/service.ts:77"],
+      "depends_on": ["entity.volunteerattendance", "entity.clubmembership", "entity.volunteerservicelog"],
+      "consumed_by": ["svc.volunteers.reviewRecord", "workflow.volunteer.servicelog"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "ui.admin.volunteers",
+      "type": "ui",
+      "label": "/admin/volunteers — paginated profile, attendance and service-hour review queues; renders VolunteerReview for every row with no self-record exclusion",
+      "evidence": ["src/app/admin/(dashboard)/volunteers/page.tsx:11", "src/app/admin/(dashboard)/volunteers/page.tsx:33", "src/app/admin/(dashboard)/volunteers/page.tsx:34"],
+      "depends_on": ["svc.auth.requireAdminPage", "entity.volunteerattendance", "entity.volunteerservicelog"],
+      "consumed_by": ["ui.admin.volunteerReview", "workflow.volunteer.servicelog"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "ui.admin.volunteerReview",
+      "type": "ui",
+      "label": "VolunteerReview — decision select + reason input with no required/minLength (QA-UI-001)",
+      "evidence": ["src/components/admin/volunteer-review.tsx:8", "src/components/admin/volunteer-review.tsx:10"],
+      "depends_on": ["svc.actions.admin.decideVolunteerRecord"],
+      "consumed_by": ["ui.admin.volunteers", "workflow.volunteer.servicelog"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.actions.admin.decideVolunteerRecord",
+      "type": "service",
+      "label": "decideVolunteerRecord — requireAdmin('ADMIN'), kind/id/version/decision/reason parse",
+      "evidence": ["src/server/actions/admin/volunteers.ts:11", "src/server/actions/admin/volunteers.ts:14", "src/server/actions/admin/volunteers.ts:20"],
+      "depends_on": ["svc.auth.requireAdmin", "svc.volunteers.reviewRecord"],
+      "consumed_by": ["ui.admin.volunteerReview", "workflow.volunteer.servicelog"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.volunteers.reviewRecord",
+      "type": "service",
+      "label": "reviewVolunteerRecord — reason >=3 chars for non-approve, version/status conflict, SELF_APPROVAL ban, VOID cascades to the attached service log, hours need APPROVED attendance (REQ-VOL-038, REQ-VOL-039)",
+      "evidence": ["src/server/volunteers/service.ts:85", "src/server/volunteers/service.ts:86", "src/server/volunteers/service.ts:92", "src/server/volunteers/service.ts:96", "src/server/volunteers/service.ts:106", "src/server/volunteers/service.ts:107"],
+      "depends_on": ["entity.volunteerattendance", "entity.volunteerservicelog", "entity.auditevent", "entity.notificationoutbox"],
+      "consumed_by": ["out.volunteer.approvedMinutes", "workflow.volunteer.servicelog"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "out.volunteer.approvedMinutes",
+      "type": "service",
+      "label": "Confirmed total — aggregate sum of minutes where log APPROVED and attendance APPROVED",
+      "evidence": ["src/app/volunteer/page.tsx:19", "src/components/volunteer/workspace.tsx:38"],
+      "depends_on": ["svc.volunteers.reviewRecord", "entity.volunteerservicelog"],
+      "consumed_by": ["workflow.volunteer.servicelog"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "entity.volunteerprofile",
+      "type": "entity",
+      "label": "VolunteerProfile (Postgres) — one per user, carries consentVersion and shareSkillsWithClubs",
+      "evidence": ["prisma/schema.prisma:411", "src/server/volunteers/service.ts:21"],
+      "depends_on": ["entity.user"],
+      "consumed_by": ["svc.volunteers.submitAttendance", "svc.projects.setTaskVolunteer", "svc.projects.requireVolunteerTask", "out.club.workspaceAccess"],
+      "confidence": "suspected"
+    },
+    {
+      "id": "entity.volunteerattendance",
+      "type": "entity",
+      "label": "VolunteerAttendance (Postgres) — serviceDate is @db.Date; SUBMITTED|APPROVED|REJECTED|VOIDED; history immutable by trigger",
+      "evidence": ["prisma/schema.prisma:447", "prisma/schema.prisma:451", "prisma/migrations/20261026054227_phase3_volunteers/migration.sql:172"],
+      "depends_on": ["entity.volunteerprofile", "entity.club"],
+      "consumed_by": ["svc.volunteers.submitServiceLog", "svc.volunteers.reviewRecord"],
+      "confidence": "suspected"
+    },
+    {
+      "id": "entity.volunteerservicelog",
+      "type": "entity",
+      "label": "VolunteerServiceLog (Postgres) — one per attendance; minutes integer; voided transitively when its attendance is voided",
+      "evidence": ["src/server/volunteers/service.ts:78", "src/server/volunteers/service.ts:96"],
+      "depends_on": ["entity.volunteerattendance"],
+      "consumed_by": ["out.volunteer.approvedMinutes", "svc.volunteers.reviewRecord"],
+      "confidence": "confirmed"
+    },
+
+    {
+      "id": "workflow.project.task",
+      "type": "service",
+      "label": "WF4 — Task assignment, volunteer evidence upload, completion review",
+      "evidence": ["src/server/projects/service.ts:148", "src/app/api/project-tasks/[id]/evidence/route.ts:10", "src/server/projects/service.ts:232"],
+      "depends_on": ["svc.actions.admin.projectops.run", "svc.projects.setTaskVolunteer", "ui.volunteer.taskDetail", "svc.actions.projects.updateAssignedTask", "svc.projects.updateMyTask", "api.projecttasks.evidence", "svc.projects.createTaskEvidence", "ui.admin.projectOps", "svc.actions.admin.decideTask", "svc.projects.reviewTaskCompletion"],
+      "consumed_by": ["out.project.taskApproved"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "ui.admin.projectOps",
+      "type": "ui",
+      "label": "/admin/project-operations/[id] TaskRow — assign, dependency, completion review (status SUBMITTED), administrative status, collapsed history+evidence, admin evidence upload gated only on not-closed",
+      "evidence": ["src/app/admin/(dashboard)/project-operations/[id]/page.tsx:12", "src/components/admin/project-operations.tsx:54", "src/components/admin/project-operations.tsx:60"],
+      "depends_on": ["svc.auth.requireAdminPage", "entity.projecttask", "entity.projecttaskevidence"],
+      "consumed_by": ["svc.actions.admin.decideTask", "api.projecttasks.evidence", "workflow.project.task"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.actions.admin.projectops.run",
+      "type": "service",
+      "label": "admin/project-operations.ts run() wrapper — requireAdmin('ADMIN') for all 11 actions; revalidates /admin, /volunteer/tasks and /club",
+      "evidence": ["src/server/actions/admin/project-operations.ts:13", "src/server/actions/admin/project-operations.ts:16", "src/server/actions/admin/project-operations.ts:20"],
+      "depends_on": ["svc.auth.requireAdmin"],
+      "consumed_by": ["svc.actions.admin.decideTask", "svc.projects.setTaskVolunteer", "workflow.project.task"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.projects.setTaskVolunteer",
+      "type": "service",
+      "label": "setTaskVolunteer — task open, project PLANNED|ACTIVE, assignment+club ACTIVE, current consented volunteer profile, ACTIVE membership; writes TaskAssignment + history + audit + outbox",
+      "evidence": ["src/server/projects/service.ts:148", "src/server/projects/service.ts:151", "src/server/projects/service.ts:153", "src/server/projects/service.ts:162"],
+      "depends_on": ["entity.projecttask", "entity.taskassignment", "entity.volunteerprofile", "entity.clubmembership", "entity.notificationoutbox"],
+      "consumed_by": ["svc.projects.requireVolunteerTask", "ui.volunteer.taskList", "workflow.project.task"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "ui.volunteer.taskList",
+      "type": "ui",
+      "label": "/volunteer/tasks — paginated list filtered by active assignment, current consent, project/assignment/club ACTIVE and live membership",
+      "evidence": ["src/app/volunteer/tasks/page.tsx:10", "src/app/volunteer/tasks/page.tsx:15", "src/app/volunteer/tasks/page.tsx:17"],
+      "depends_on": ["svc.auth.getAdminUser", "entity.taskassignment"],
+      "consumed_by": ["ui.volunteer.taskDetail", "workflow.project.task"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "ui.volunteer.taskDetail",
+      "type": "ui",
+      "label": "/volunteer/tasks/[id] — requireVolunteerTask then render; TaskProgress gates both the progress form and the evidence section on editable = TODO|IN_PROGRESS and no open dependency",
+      "evidence": ["src/app/volunteer/tasks/[id]/page.tsx:15", "src/app/volunteer/tasks/[id]/page.tsx:16", "src/components/volunteer/task-progress.tsx:11", "src/components/volunteer/task-progress.tsx:12"],
+      "depends_on": ["svc.projects.requireVolunteerTask", "entity.projecttask", "entity.projecttaskevidence"],
+      "consumed_by": ["svc.actions.projects.updateAssignedTask", "ui.projects.evidenceUpload", "workflow.project.task"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.actions.projects.updateAssignedTask",
+      "type": "service",
+      "label": "updateAssignedTask — getAdminUser, rate limit project-task-progress 60/h, taskProgressSchema",
+      "evidence": ["src/server/actions/projects/tasks.ts:12", "src/server/actions/projects/tasks.ts:18", "src/server/actions/projects/tasks.ts:21"],
+      "depends_on": ["svc.auth.getAdminUser", "svc.ratelimit", "svc.projects.updateMyTask"],
+      "consumed_by": ["ui.volunteer.taskDetail", "workflow.project.task"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.projects.updateMyTask",
+      "type": "service",
+      "label": "updateMyTask — version check, scope check, live membership, status TODO|IN_PROGRESS only, all predecessors APPROVED, submit requires 100%",
+      "evidence": ["src/server/projects/service.ts:214", "src/server/projects/service.ts:218", "src/server/projects/service.ts:220", "src/server/projects/service.ts:221", "src/server/projects/service.ts:222"],
+      "depends_on": ["entity.projecttask", "entity.projecttaskhistory", "entity.clubmembership"],
+      "consumed_by": ["svc.projects.reviewTaskCompletion", "workflow.project.task"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.projects.requireVolunteerTask",
+      "type": "service",
+      "label": "requireVolunteerTask — project ACTIVE, assignment ACTIVE, club ACTIVE, active assignment at the current consent version, plus a live membership re-check (REQ-PRJ-040)",
+      "evidence": ["src/server/projects/service.ts:197", "src/server/projects/service.ts:199", "src/server/projects/service.ts:200"],
+      "depends_on": ["entity.projecttask", "entity.taskassignment", "entity.clubmembership"],
+      "consumed_by": ["ui.volunteer.taskDetail", "api.projecttasks.evidence", "svc.projects.requireTaskReader"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.projects.requireTaskReader",
+      "type": "service",
+      "label": "requireTaskReader — ADMIN bypass, else assigned volunteer, else viewing coordinator",
+      "evidence": ["src/server/projects/service.ts:205", "src/server/projects/service.ts:208", "src/server/projects/service.ts:210"],
+      "depends_on": ["svc.projects.requireVolunteerTask", "svc.projects.requireProjectClubCoordinator"],
+      "consumed_by": ["api.taskevidence.file"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.projects.requireProjectClubCoordinator",
+      "type": "service",
+      "label": "requireProjectClubCoordinator — assignment ACTIVE, club ACTIVE, coordinator match, project ACTIVE|PLANNED, permission flag, live membership (REQ-CLUB-033)",
+      "evidence": ["src/server/projects/service.ts:81", "src/server/projects/service.ts:83", "src/server/projects/service.ts:84"],
+      "depends_on": ["entity.clubmembership"],
+      "consumed_by": ["svc.projects.requireTaskReader", "out.club.workspaceAccess"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "ui.projects.evidenceUpload",
+      "type": "ui",
+      "label": "TaskEvidenceUpload — fetch POST with manual pending/error state; used by both the volunteer task page and the admin TaskRow",
+      "evidence": ["src/components/projects/task-evidence-upload.tsx:6", "src/components/projects/task-evidence-upload.tsx:15"],
+      "depends_on": ["api.projecttasks.evidence"],
+      "consumed_by": ["ui.volunteer.taskDetail", "ui.admin.projectOps", "workflow.project.task"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "api.projecttasks.evidence",
+      "type": "api",
+      "label": "POST /api/project-tasks/[id]/evidence — host+protocol same-origin, getAdminUser, ADMIN bypass else requireVolunteerTask, rate limit 60/h, size/MIME/magic-byte, compensating deleteStoredFile",
+      "evidence": ["src/app/api/project-tasks/[id]/evidence/route.ts:16", "src/app/api/project-tasks/[id]/evidence/route.ts:19", "src/app/api/project-tasks/[id]/evidence/route.ts:23", "src/app/api/project-tasks/[id]/evidence/route.ts:37", "src/app/api/project-tasks/[id]/evidence/route.ts:45"],
+      "depends_on": ["svc.auth.getAdminUser", "svc.projects.requireVolunteerTask", "svc.ratelimit", "svc.storage.storeFile", "svc.projects.createTaskEvidence"],
+      "consumed_by": ["ui.projects.evidenceUpload", "workflow.project.task"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.projects.createTaskEvidence",
+      "type": "service",
+      "label": "createTaskEvidenceFromUpload — storage-key namespace enforced, task status must be TODO|IN_PROGRESS for EVERY actor including ADMIN, writes Media + ProjectTaskEvidence + task history + audit",
+      "evidence": ["src/server/projects/service.ts:262", "src/server/projects/service.ts:263", "src/server/projects/service.ts:267", "src/server/projects/service.ts:272"],
+      "depends_on": ["entity.media", "entity.projecttaskevidence", "entity.projecttaskhistory"],
+      "consumed_by": ["api.projecttasks.evidence", "api.taskevidence.file", "workflow.project.task"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "api.taskevidence.file",
+      "type": "api",
+      "label": "GET /api/task-evidence/[id]/file — archivedAt filter, PRIVATE visibility, storage-key prefix check, requireTaskReader; private no-store headers",
+      "evidence": ["src/app/api/task-evidence/[id]/file/route.ts:13", "src/app/api/task-evidence/[id]/file/route.ts:14", "src/app/api/task-evidence/[id]/file/route.ts:17"],
+      "depends_on": ["svc.auth.getAdminUser", "svc.projects.requireTaskReader", "entity.projecttaskevidence", "svc.storage.readPrivateFile"],
+      "consumed_by": ["ui.volunteer.taskDetail", "ui.admin.projectOps", "workflow.project.task"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.actions.admin.decideTask",
+      "type": "service",
+      "label": "decideTask — APPROVE|RETURN, optimistic version, reason max 1000",
+      "evidence": ["src/server/actions/admin/project-operations.ts:108", "src/server/actions/admin/project-operations.ts:112"],
+      "depends_on": ["svc.actions.admin.projectops.run", "svc.projects.reviewTaskCompletion"],
+      "consumed_by": ["ui.admin.projectOps", "workflow.project.task"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.projects.reviewTaskCompletion",
+      "type": "service",
+      "label": "reviewTaskCompletion — reason >=3 on RETURN, status must be SUBMITTED, SELF_APPROVAL ban on any assignee, APPROVE requires predecessors APPROVED and subtasks resolved (REQ-VOL-038)",
+      "evidence": ["src/server/projects/service.ts:232", "src/server/projects/service.ts:233", "src/server/projects/service.ts:236", "src/server/projects/service.ts:237", "src/server/projects/service.ts:238", "src/server/projects/service.ts:244"],
+      "depends_on": ["entity.projecttask", "entity.projecttaskhistory", "entity.auditevent", "entity.notificationoutbox"],
+      "consumed_by": ["out.project.taskApproved", "workflow.project.task"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "out.project.taskApproved",
+      "type": "service",
+      "label": "Task APPROVED with completedAt; unblocks dependants and permits milestone/project completion",
+      "evidence": ["src/server/projects/service.ts:240", "src/server/projects/service.ts:120", "src/server/projects/service.ts:36"],
+      "depends_on": ["svc.projects.reviewTaskCompletion"],
+      "consumed_by": ["workflow.project.task"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "entity.projecttask",
+      "type": "entity",
+      "label": "ProjectTask (Postgres) — TODO|IN_PROGRESS|SUBMITTED|BLOCKED|APPROVED|CANCELLED, optimistic version, milestoneId unindexed",
+      "evidence": ["prisma/schema.prisma:1175", "prisma/schema.prisma:1203"],
+      "depends_on": [],
+      "consumed_by": ["svc.projects.updateMyTask", "svc.projects.reviewTaskCompletion", "svc.projects.setTaskVolunteer", "ui.volunteer.taskDetail"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "entity.taskassignment",
+      "type": "entity",
+      "label": "TaskAssignment (Postgres) — unique (taskId,profileId), active flag, assignedAt/endedAt",
+      "evidence": ["src/server/projects/service.ts:155", "src/server/projects/service.ts:158"],
+      "depends_on": ["entity.projecttask", "entity.volunteerprofile"],
+      "consumed_by": ["svc.projects.requireVolunteerTask", "ui.volunteer.taskList"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "entity.projecttaskhistory",
+      "type": "entity",
+      "label": "ProjectTaskHistory (Postgres) — immutable by SQL trigger; records every progress, assignment, evidence and review event",
+      "evidence": ["prisma/schema.prisma:1233", "src/server/projects/service.ts:226"],
+      "depends_on": ["entity.projecttask"],
+      "consumed_by": ["ui.volunteer.taskDetail", "ui.admin.projectOps"],
+      "confidence": "suspected"
+    },
+    {
+      "id": "entity.projecttaskevidence",
+      "type": "entity",
+      "label": "ProjectTaskEvidence (Postgres row) + private bytes; mediaId onDelete Restrict; archivedAt has a read filter but no writer (QA-DB-004)",
+      "evidence": ["prisma/schema.prisma:1249", "prisma/schema.prisma:1259", "prisma/schema.prisma:1257"],
+      "depends_on": ["entity.media", "entity.projecttask"],
+      "consumed_by": ["api.taskevidence.file", "ui.admin.projectOps", "ui.volunteer.taskDetail"],
+      "confidence": "confirmed"
+    },
+
+    {
+      "id": "workflow.media.publish",
+      "type": "service",
+      "label": "WF5 — Admin uploads media, attaches it to a document, publishes publicly",
+      "evidence": ["src/app/api/admin/upload/route.ts:20", "src/server/actions/admin/evidence.ts:12", "src/server/queries/public/shared.ts:101"],
+      "depends_on": ["ui.admin.mediaLibrary", "api.admin.upload", "svc.storage.storeFile", "ui.admin.mediaPicker", "svc.actions.admin.evidence.saveDocument", "svc.validations.documentSchema"],
+      "consumed_by": ["out.public.document", "svc.actions.admin.media.deleteMedia"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "ui.admin.mediaLibrary",
+      "type": "ui",
+      "label": "Media library — filter pills, search, visibility toggle, upload; delete dialog copy contradicts the server rule (QA-UI-002)",
+      "evidence": ["src/components/admin/media-library.tsx:25", "src/components/admin/media-library.tsx:216"],
+      "depends_on": ["api.admin.upload", "api.admin.mediaList", "svc.actions.admin.media.deleteMedia"],
+      "consumed_by": ["workflow.media.publish"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "ui.admin.mediaPicker",
+      "type": "ui",
+      "label": "MediaPicker — attaches a Media id into a hidden input on every content form",
+      "evidence": ["src/components/admin/pickers.tsx:216"],
+      "depends_on": ["api.admin.mediaList"],
+      "consumed_by": ["svc.actions.admin.evidence.saveDocument", "workflow.media.publish"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "api.admin.upload",
+      "type": "api",
+      "label": "POST /api/admin/upload — host-only same-origin, requireAdmin (ADMIN or EDITOR), rate limit 120/h, size/MIME/magic-byte, no compensating delete (QA-DB-003)",
+      "evidence": ["src/app/api/admin/upload/route.ts:11", "src/app/api/admin/upload/route.ts:25", "src/app/api/admin/upload/route.ts:30", "src/app/api/admin/upload/route.ts:50", "src/app/api/admin/upload/route.ts:72"],
+      "depends_on": ["svc.auth.requireAdmin", "svc.ratelimit", "svc.storage.storeFile", "entity.media", "entity.activitylog"],
+      "consumed_by": ["ui.admin.mediaLibrary", "workflow.media.publish"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "api.admin.mediaList",
+      "type": "api",
+      "label": "GET /api/admin/media — operational-private prefixes hidden from non-ADMIN (REQ-MEDIA-007); backing query capped at 500 with no pagination (QA-DB-006)",
+      "evidence": ["src/app/api/admin/media/route.ts:12", "src/app/api/admin/media/route.ts:23", "src/server/queries/admin.ts:366"],
+      "depends_on": ["svc.auth.requireAdmin", "entity.media"],
+      "consumed_by": ["ui.admin.mediaLibrary", "ui.admin.mediaPicker"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.storage.storeFile",
+      "type": "external",
+      "label": "storeFile() — local filesystem by default, Vercel Blob when STORAGE_DRIVER=vercel-blob; namespaced key decides the private prefix",
+      "evidence": ["src/lib/storage.ts:61", "src/lib/storage.ts:67", "src/lib/storage.ts:78"],
+      "depends_on": [],
+      "consumed_by": ["api.admin.upload", "api.admin.clubDocuments", "api.projecttasks.evidence", "api.admin.donationEvidence"],
+      "confidence": "suspected"
+    },
+    {
+      "id": "svc.storage.readPrivateFile",
+      "type": "external",
+      "label": "readPrivateFile() — path-traversal guard on the local driver; Blob get on the blob driver",
+      "evidence": ["src/lib/storage.ts:87", "src/lib/storage.ts:95"],
+      "depends_on": [],
+      "consumed_by": ["api.club.documentFile", "api.taskevidence.file"],
+      "confidence": "suspected"
+    },
+    {
+      "id": "svc.validations.documentSchema",
+      "type": "service",
+      "label": "documentSchema — published public document needs a public file; personal data needs isRedacted (REQ-DOC-001, REQ-DOC-004)",
+      "evidence": ["src/lib/validations/admin.ts:285", "src/lib/validations/admin.ts:289"],
+      "depends_on": [],
+      "consumed_by": ["svc.actions.admin.evidence.saveDocument", "workflow.media.publish"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.actions.admin.evidence.saveDocument",
+      "type": "service",
+      "label": "saveDocument — public slot must be PUBLIC media, original slot must be PRIVATE and non-operational; publishedAt stamped once; expires 6 cache tags",
+      "evidence": ["src/server/actions/admin/evidence.ts:12", "src/server/actions/admin/evidence.ts:23", "src/server/actions/admin/evidence.ts:26", "src/server/actions/admin/evidence.ts:29", "src/server/actions/admin/evidence.ts:36"],
+      "depends_on": ["svc.auth.requireAdmin", "svc.validations.documentSchema", "entity.media", "entity.document", "svc.cache.expire"],
+      "consumed_by": ["out.public.document", "workflow.media.publish"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.cache.expire",
+      "type": "service",
+      "label": "expire() — updateTag per cache tag plus refresh(); direct DB and seed writes bypass it",
+      "evidence": ["src/server/actions/admin-helpers.ts:87", "APPLICATION_CONTEXT.md:97"],
+      "depends_on": [],
+      "consumed_by": ["svc.actions.admin.evidence.saveDocument", "svc.actions.admin.media.deleteMedia", "out.public.document"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.actions.admin.media.deleteMedia",
+      "type": "service",
+      "label": "deleteMedia — operational-private files refused to non-ADMIN, published PUBLIC Document.fileId usage blocked (REQ-DOC-005); no other reference is checked",
+      "evidence": ["src/server/actions/admin/media.ts:46", "src/server/actions/admin/media.ts:50", "src/server/actions/admin/media.ts:51", "src/server/actions/admin/media.ts:53"],
+      "depends_on": ["svc.auth.requireAdmin", "entity.media", "entity.document", "svc.cache.expire"],
+      "consumed_by": ["workflow.media.publish"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "out.public.document",
+      "type": "ui",
+      "label": "Public document surface — PUBLIC_DOCUMENT_WHERE allowlist; private media never reaches a public DTO (REQ-DOC-006)",
+      "evidence": ["src/server/queries/public/shared.ts:101", "src/server/queries/public/shared.ts:40", "src/server/queries/public/shared.ts:122"],
+      "depends_on": ["svc.actions.admin.evidence.saveDocument", "entity.document", "svc.cache.expire"],
+      "consumed_by": ["workflow.media.publish"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "entity.media",
+      "type": "entity",
+      "label": "Media (Postgres row + filesystem/Blob bytes) — storageKey unique; 16 inbound SetNull relations, 4 Restrict, 1 Cascade; uploadedById unindexed",
+      "evidence": ["prisma/schema.prisma:753", "prisma/schema.prisma:1575", "prisma/schema.prisma:1818", "prisma/schema.prisma:403"],
+      "depends_on": ["svc.storage.storeFile"],
+      "consumed_by": ["svc.actions.admin.media.deleteMedia", "entity.document", "entity.clubdocument", "entity.projecttaskevidence", "entity.galleryimage", "entity.donationevidence"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "entity.document",
+      "type": "entity",
+      "label": "Document (Postgres) — file / originalFile / thumbnail all onDelete SetNull; isRedacted, containsPersonalData, visibility, status",
+      "evidence": ["prisma/schema.prisma:1544", "prisma/schema.prisma:1575", "prisma/schema.prisma:1576", "prisma/schema.prisma:1577"],
+      "depends_on": ["entity.media"],
+      "consumed_by": ["out.public.document", "svc.actions.admin.media.deleteMedia"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "entity.galleryimage",
+      "type": "entity",
+      "label": "GalleryImage (Postgres) — the only onDelete Cascade in the schema; mediaId is a non-leading unique column so the cascade scan is unindexed",
+      "evidence": ["prisma/schema.prisma:1818", "prisma/schema.prisma:1820"],
+      "depends_on": ["entity.media"],
+      "consumed_by": ["svc.actions.admin.media.deleteMedia"],
+      "confidence": "confirmed"
+    },
+
+    {
+      "id": "workflow.donation.intake",
+      "type": "service",
+      "label": "WF6 — Manual donation intake to donor visibility; terminates at PENDING_VERIFICATION, the only state the enum has",
+      "evidence": ["src/components/admin/donation-intake.tsx:31", "src/server/donations/service.ts:31", "prisma/schema.prisma:65", "src/app/donor/page.tsx:18"],
+      "depends_on": ["ui.admin.donations", "ui.admin.donorLink", "svc.actions.admin.linkDonorAccount", "svc.donations.createDonorProfile", "ui.admin.manualIntake", "svc.actions.admin.recordManualIntake", "svc.donations.createPendingManualDonation", "ui.donor.page"],
+      "consumed_by": ["out.donation.pending"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "ui.admin.donations",
+      "type": "ui",
+      "label": "/admin/donations — ADMIN only; donor list, published non-demo project list, 100 most recent donations; mints a fresh idempotencyKey per render",
+      "evidence": ["src/app/admin/(dashboard)/donations/page.tsx:13", "src/app/admin/(dashboard)/donations/page.tsx:17", "src/app/admin/(dashboard)/donations/page.tsx:25"],
+      "depends_on": ["svc.auth.requireAdminPage", "entity.donorprofile", "entity.donation"],
+      "consumed_by": ["ui.admin.donorLink", "ui.admin.manualIntake", "workflow.donation.intake"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "ui.admin.donorLink",
+      "type": "ui",
+      "label": "DonorLinkForm — email, type, organizationName; permanently disabled anonymousByDefault checkbox (QA-REQ-007), no client mirror of the conditional org rule (QA-UI-003)",
+      "evidence": ["src/components/admin/donation-intake.tsx:16", "src/components/admin/donation-intake.tsx:25", "src/components/admin/donation-intake.tsx:26"],
+      "depends_on": ["svc.actions.admin.linkDonorAccount"],
+      "consumed_by": ["ui.admin.donations", "workflow.donation.intake"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "ui.admin.manualIntake",
+      "type": "ui",
+      "label": "ManualDonationIntakeForm — hidden idempotencyKey, hardcoded empty campaignId (QA-UI-004), silently disabled submit when prerequisites are empty (QA-UI-005)",
+      "evidence": ["src/components/admin/donation-intake.tsx:31", "src/components/admin/donation-intake.tsx:36", "src/components/admin/donation-intake.tsx:37", "src/components/admin/donation-intake.tsx:47"],
+      "depends_on": ["svc.actions.admin.recordManualIntake"],
+      "consumed_by": ["ui.admin.donations", "workflow.donation.intake"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.actions.admin.donations.run",
+      "type": "service",
+      "label": "admin/donations.ts run() wrapper — requireAdmin('ADMIN'); the only module family whose error payload carries a machine-readable code (QA-API-004)",
+      "evidence": ["src/server/actions/admin/donations.ts:12", "src/server/actions/admin/donations.ts:15", "src/server/actions/admin/donations.ts:21"],
+      "depends_on": ["svc.auth.requireAdmin"],
+      "consumed_by": ["svc.actions.admin.linkDonorAccount", "svc.actions.admin.recordManualIntake"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.actions.admin.linkDonorAccount",
+      "type": "service",
+      "label": "linkDonorAccount — donorProfileSchema parse then createDonorProfile",
+      "evidence": ["src/server/actions/admin/donations.ts:34", "src/server/actions/admin/donations.ts:36"],
+      "depends_on": ["svc.actions.admin.donations.run", "svc.donations.createDonorProfile"],
+      "consumed_by": ["ui.admin.donorLink", "workflow.donation.intake"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.donations.createDonorProfile",
+      "type": "service",
+      "label": "createDonorProfile — the target account must already exist AND be PORTAL_USER (REQ-DON-043); anonymousByDefault never written",
+      "evidence": ["src/server/donations/service.ts:17", "src/server/donations/service.ts:20", "src/server/donations/service.ts:21"],
+      "depends_on": ["entity.user", "entity.donorprofile", "entity.auditevent"],
+      "consumed_by": ["svc.donations.createPendingManualDonation", "ui.donor.page", "workflow.donation.intake"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.actions.admin.recordManualIntake",
+      "type": "service",
+      "label": "recordManualDonationIntake — manualDonationIntakeSchema parse; revalidates /admin/donations and /donor",
+      "evidence": ["src/server/actions/admin/donations.ts:41", "src/server/actions/admin/donations.ts:43", "src/server/actions/admin/donations.ts:18"],
+      "depends_on": ["svc.actions.admin.donations.run", "svc.donations.createPendingManualDonation"],
+      "consumed_by": ["ui.admin.manualIntake", "workflow.donation.intake"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "svc.donations.createPendingManualDonation",
+      "type": "service",
+      "label": "createPendingManualDonation — idempotency key plus SHA-256 request fingerprint, donor must be PORTAL_USER, project must be PUBLISHED and non-demo, campaign must match the project; status hardcoded PENDING_VERIFICATION",
+      "evidence": ["src/server/donations/service.ts:31", "src/server/donations/service.ts:35", "src/server/donations/service.ts:36", "src/server/donations/service.ts:46", "src/server/donations/service.ts:55"],
+      "depends_on": ["entity.donorprofile", "entity.donation", "entity.donationhistory", "entity.auditevent"],
+      "consumed_by": ["out.donation.pending", "workflow.donation.intake"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "api.admin.donationEvidence",
+      "type": "api",
+      "label": "POST /api/admin/donations/[id]/evidence — ADMIN only, donation must be PENDING_VERIFICATION, rate limit 40/h, compensating delete",
+      "evidence": ["src/app/api/admin/donations/[id]/evidence/route.ts:16", "src/app/api/admin/donations/[id]/evidence/route.ts:22", "src/server/donations/service.ts:66", "src/server/donations/service.ts:70"],
+      "depends_on": ["svc.auth.requireAdmin", "svc.storage.storeFile", "entity.donationevidence", "entity.media"],
+      "consumed_by": ["ui.admin.donations", "workflow.donation.intake"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "ui.donor.page",
+      "type": "ui",
+      "label": "/donor — own donor profile only, 100 most recent donations, status cell is the literal string 'Pending verification' rather than the row's status",
+      "evidence": ["src/app/donor/page.tsx:12", "src/app/donor/page.tsx:14", "src/app/donor/page.tsx:18", "src/app/donor/page.tsx:19"],
+      "depends_on": ["svc.auth.getAdminUser", "svc.donations.createDonorProfile", "entity.donation"],
+      "consumed_by": ["out.donation.pending", "workflow.donation.intake"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "out.donation.pending",
+      "type": "service",
+      "label": "Terminal state — PENDING_VERIFICATION forever; no verification, receipt, allocation or confirmed total exists (REQ-APPR-046 inert by design)",
+      "evidence": ["prisma/schema.prisma:65", "prisma/migrations/20261026073000_phase6_donation_intake/migration.sql:81", "src/server/payments/provider.ts:17", "src/server/fundraising/service.ts:67"],
+      "depends_on": ["svc.donations.createPendingManualDonation", "ui.donor.page"],
+      "consumed_by": ["workflow.donation.intake"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "entity.donorprofile",
+      "type": "entity",
+      "label": "DonorProfile (Postgres) — one per user, anonymousByDefault default true and never read",
+      "evidence": ["prisma/schema.prisma:1378", "prisma/schema.prisma:1384", "src/server/donations/service.ts:21"],
+      "depends_on": ["entity.user"],
+      "consumed_by": ["svc.donations.createPendingManualDonation", "ui.donor.page"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "entity.donation",
+      "type": "entity",
+      "label": "Donation (Postgres) — amountPaise BigInt, currency INR, status PENDING_VERIFICATION, unique idempotencyKey; SQL CHECK constraints enforce all three",
+      "evidence": ["prisma/schema.prisma:1396", "prisma/schema.prisma:1404", "prisma/migrations/20261026073000_phase6_donation_intake/migration.sql:81"],
+      "depends_on": ["entity.donorprofile"],
+      "consumed_by": ["ui.donor.page", "ui.admin.donations"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "entity.donationhistory",
+      "type": "entity",
+      "label": "DonationHistory (Postgres) — immutable by SQL trigger; snapshot written at intake",
+      "evidence": ["prisma/migrations/20261026073000_phase6_donation_intake/migration.sql:89", "src/server/donations/service.ts:57"],
+      "depends_on": ["entity.donation"],
+      "consumed_by": ["svc.donations.createPendingManualDonation"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "entity.donationevidence",
+      "type": "entity",
+      "label": "DonationEvidence (Postgres row) + private bytes; mediaId onDelete Restrict; archivedAt has no writer",
+      "evidence": ["prisma/schema.prisma:1441", "prisma/schema.prisma:1451"],
+      "depends_on": ["entity.media", "entity.donation"],
+      "consumed_by": ["api.admin.donationEvidence", "ui.admin.donations"],
+      "confidence": "confirmed"
+    },
+
+    {
+      "id": "test.unit.approvalDefinition",
+      "type": "test",
+      "label": "src/lib/approval/definition.test.ts — approval policy/scope definitions (REQ-APPR-046)",
+      "evidence": ["src/lib/approval/definition.test.ts", "package.json:11", "qa/reports/evidence/mechanical/test.log"],
+      "depends_on": ["src/lib/approval/definition.ts"],
+      "consumed_by": [],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "test.unit.fundraisingValidation",
+      "type": "test",
+      "label": "src/lib/validations/fundraising.test.ts — rupeesToPaise / formatPaise; the only unit test reachable from WF6 (via amount conversion)",
+      "evidence": ["src/lib/validations/fundraising.test.ts", "package.json:11"],
+      "depends_on": ["src/lib/validations/fundraising.ts"],
+      "consumed_by": ["svc.donations.createPendingManualDonation", "ui.donor.page"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "test.unit.donationsValidation",
+      "type": "test",
+      "label": "src/lib/validations/donations.test.ts — donorProfileSchema and manualDonationIntakeSchema only; no service, action or route is exercised",
+      "evidence": ["src/lib/validations/donations.test.ts", "src/lib/validations/donations.ts:7", "package.json:11"],
+      "depends_on": ["src/lib/validations/donations.ts"],
+      "consumed_by": ["ui.admin.donorLink", "ui.admin.manualIntake", "svc.actions.admin.linkDonorAccount", "svc.actions.admin.recordManualIntake"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "test.unit.paymentProvider",
+      "type": "test",
+      "label": "src/server/payments/provider.test.ts — tests a module with no importer anywhere in src/",
+      "evidence": ["src/server/payments/provider.test.ts", "src/server/payments/provider.ts:17", "package.json:11"],
+      "depends_on": ["src/server/payments/provider.ts"],
+      "consumed_by": [],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "test.unit.financeChart",
+      "type": "test",
+      "label": "src/lib/finance/chart.test.ts — tests a module with no importer anywhere in src/ (Phase-7 ledger design)",
+      "evidence": ["src/lib/finance/chart.test.ts", "src/lib/finance/chart.ts", "package.json:11"],
+      "depends_on": ["src/lib/finance/chart.ts"],
+      "consumed_by": [],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "test.unit.financeJournal",
+      "type": "test",
+      "label": "src/lib/finance/journal-core.test.ts — tests a module with no importer anywhere in src/ (Phase-7 ledger design)",
+      "evidence": ["src/lib/finance/journal-core.test.ts", "src/lib/finance/journal-core.ts", "package.json:11"],
+      "depends_on": ["src/lib/finance/journal-core.ts"],
+      "consumed_by": [],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "test.harness.clubUi",
+      "type": "test",
+      "label": "scripts/verify-club-ui.ts — headed Playwright harness named by REQ-CLUB-032/035/036 and REQ-MEDIA-007; needs system Chrome and a disposable Postgres; NOT in npm run check",
+      "evidence": ["scripts/verify-club-ui.ts", "package.json:20", "qa/discovery/requirements-inventory.md:53"],
+      "depends_on": [],
+      "consumed_by": ["workflow.club.membership", "out.club.workspaceAccess", "api.club.documentFile"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "test.harness.volunteerUi",
+      "type": "test",
+      "label": "scripts/verify-volunteer-ui.ts — named by REQ-VOL-037/038; never executed in this run",
+      "evidence": ["scripts/verify-volunteer-ui.ts", "package.json:22", "qa/discovery/requirements-inventory.md:59"],
+      "depends_on": [],
+      "consumed_by": ["workflow.volunteer.servicelog", "svc.volunteers.reviewRecord"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "test.harness.projectUi",
+      "type": "test",
+      "label": "scripts/verify-project-ui.ts — named by REQ-CLUB-033 and REQ-PRJ-040; never executed in this run",
+      "evidence": ["scripts/verify-project-ui.ts", "package.json:24", "qa/discovery/requirements-inventory.md:61"],
+      "depends_on": [],
+      "consumed_by": ["workflow.project.task", "svc.projects.requireVolunteerTask"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "test.harness.donationsUi",
+      "type": "test",
+      "label": "scripts/verify-donations-ui.ts — named by REQ-DON-043; never executed in this run",
+      "evidence": ["scripts/verify-donations-ui.ts", "package.json:29", "qa/discovery/requirements-inventory.md:64"],
+      "depends_on": [],
+      "consumed_by": ["workflow.donation.intake", "svc.donations.createDonorProfile"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "test.harness.portalWorkflow",
+      "type": "test",
+      "label": "scripts/verify-portal-workflow-ui.ts — the only harness that spans several portals end to end; not referenced by any requirement row",
+      "evidence": ["scripts/verify-portal-workflow-ui.ts", "package.json:15"],
+      "depends_on": [],
+      "consumed_by": ["workflow.club.membership", "workflow.volunteer.servicelog", "workflow.project.task"],
+      "confidence": "suspected"
+    },
+    {
+      "id": "test.none.auth",
+      "type": "test",
+      "label": "NO TEST — nothing covers authorize(), the login limiter, requireAdmin/requireAdminPage or any API route handler (QA-TEST-003)",
+      "evidence": ["package.json:11", "qa/reports/evidence/mechanical/test.log"],
+      "depends_on": [],
+      "consumed_by": ["workflow.admin.login", "svc.auth.authorize", "svc.auth.requireAdmin", "api.admin.upload", "api.projecttasks.evidence", "api.taskevidence.file", "api.club.documentFile"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "test.none.media",
+      "type": "test",
+      "label": "NO TEST — nothing covers deleteMedia's reference guards, saveDocument's slot rules or the public publication gate",
+      "evidence": ["package.json:11", "src/server/actions/admin/media.ts:51"],
+      "depends_on": [],
+      "consumed_by": ["workflow.media.publish", "svc.actions.admin.media.deleteMedia", "svc.actions.admin.evidence.saveDocument"],
+      "confidence": "confirmed"
+    },
+
+    {
+      "id": "req.SEC-030",
+      "type": "service",
+      "label": "REQ-SEC-030 — sign-in, contact form and uploads are rate limited (PARTIAL, QA-AUTH-001)",
+      "evidence": ["qa/discovery/requirements-inventory.md:51"],
+      "depends_on": [],
+      "consumed_by": ["svc.auth.authorize", "svc.ratelimit", "workflow.admin.login"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "req.CLUB-034",
+      "type": "service",
+      "label": "REQ-CLUB-034 — adult self-attestation plus current versioned consent; a trust admin decides and cannot approve their own request (SATISFIED)",
+      "evidence": ["qa/discovery/requirements-inventory.md:55"],
+      "depends_on": [],
+      "consumed_by": ["svc.clubs.requestMembership", "svc.clubs.reviewMembership", "workflow.club.membership"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "req.VOL-038",
+      "type": "service",
+      "label": "REQ-VOL-038 — review can never be self-review, for volunteer records or task completion (SATISFIED)",
+      "evidence": ["qa/discovery/requirements-inventory.md:59"],
+      "depends_on": [],
+      "consumed_by": ["svc.volunteers.reviewRecord", "svc.projects.reviewTaskCompletion", "workflow.volunteer.servicelog", "workflow.project.task"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "req.VOL-039",
+      "type": "service",
+      "label": "REQ-VOL-039 — only APPROVED minutes linked to APPROVED attendance count; voiding attendance voids its hours (SATISFIED)",
+      "evidence": ["qa/discovery/requirements-inventory.md:60"],
+      "depends_on": [],
+      "consumed_by": ["out.volunteer.approvedMinutes", "svc.volunteers.reviewRecord"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "req.PRJ-040",
+      "type": "service",
+      "label": "REQ-PRJ-040 — a volunteer needs a current consented profile, active membership and an explicit active assignment (SATISFIED)",
+      "evidence": ["qa/discovery/requirements-inventory.md:61"],
+      "depends_on": [],
+      "consumed_by": ["svc.projects.requireVolunteerTask", "workflow.project.task"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "req.DOC-005",
+      "type": "service",
+      "label": "REQ-DOC-005 — media deletion must be rejected while the file backs a published public document (SATISFIED for Document.fileId only)",
+      "evidence": ["qa/discovery/requirements-inventory.md:26"],
+      "depends_on": [],
+      "consumed_by": ["svc.actions.admin.media.deleteMedia", "workflow.media.publish"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "req.DON-043",
+      "type": "service",
+      "label": "REQ-DON-043 — donor profiles link existing PORTAL_USER accounts only; intake needs a published non-demo project (SATISFIED)",
+      "evidence": ["qa/discovery/requirements-inventory.md:64"],
+      "depends_on": [],
+      "consumed_by": ["svc.donations.createDonorProfile", "svc.donations.createPendingManualDonation", "workflow.donation.intake"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "req.DON-044",
+      "type": "service",
+      "label": "REQ-DON-044 — donor profiles default to anonymous public display (UNIMPLEMENTED, QA-REQ-007); the donor page asserts it in prose",
+      "evidence": ["qa/discovery/requirements-inventory.md:65", "src/app/donor/page.tsx:19"],
+      "depends_on": [],
+      "consumed_by": ["ui.donor.page", "svc.donations.createDonorProfile"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "req.DON-045",
+      "type": "service",
+      "label": "REQ-DON-045 — donors see only their own pending history (SATISFIED)",
+      "evidence": ["qa/discovery/requirements-inventory.md:66"],
+      "depends_on": [],
+      "consumed_by": ["ui.donor.page", "workflow.donation.intake"],
+      "confidence": "confirmed"
+    },
+    {
+      "id": "req.NOTIF-047",
+      "type": "service",
+      "label": "REQ-NOTIF-047 — a financial mutation is never retried merely because notification delivery failed (UNVERIFIABLE: no delivery exists)",
+      "evidence": ["qa/discovery/requirements-inventory.md:68"],
+      "depends_on": [],
+      "consumed_by": ["entity.notificationoutbox", "out.notification.undelivered"],
+      "confidence": "confirmed"
+    }
+  ],
+  "edges_omitted": [
+    "Public content workflows other than the document path in WF5 (trustees, projects, activities, stories, news, gallery, impact) — traced only where WF5 touches them.",
+    "Fundraising request/campaign workflow — reachable only in DRAFT and gated by requireLiveApprovals(), out of scope for this phase.",
+    "Approval-foundation workflow (ApprovalPolicy/AccessGroup/Delegation) — inert by design; modelled only as test.unit.approvalDefinition.",
+    "Contact form, search, i18n negotiation and the 14 remaining admin content resources."
+  ]
+}
